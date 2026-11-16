@@ -1,1 +1,1 @@
-mode=pilot
+mode=full chunks=20

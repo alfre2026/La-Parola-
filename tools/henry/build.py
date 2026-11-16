@@ -183,15 +183,31 @@ def cut_long(s, lim=420):
     return out
 
 
+INLINE_MARK = re.compile(r'\s+(?=[\(\[]\d{1,3}\.[\)\]]\s)|(?<=[,;:])\s+(?=[IVX]{1,5}\.\s+[A-Z])')
+LEAD_MARK = re.compile(r'^((?:[IVXLC]{1,6}|\d{1,3})\.|[\(\[]\d{1,3}\.[\)\]])\s+(?=\S)')
+
+
 def segments(text):
-    segs = []
+    """Frasi da tradurre e numeri di schema («I.», «2.», «(1.)», «[2.]») tenuti da parte:
+    il traduttore automatico a volte li perde, così si rimettono dopo."""
+    segs, marks = [], []
     for line in text.split('\n'):          # la poesia tiene gli a capo
         line = line.strip()
         if not line:
             continue
         for s in split_sentences(line):
-            segs.extend(cut_long(s))
-    return segs
+            for c in cut_long(s):
+                for piece in INLINE_MARK.split(c):
+                    piece = piece.strip()
+                    if not piece:
+                        continue
+                    m = LEAD_MARK.match(piece)
+                    mk = ''
+                    if m:
+                        mk, piece = m.group(1), piece[m.end():]
+                    segs.append(piece)
+                    marks.append(mk)
+    return segs, marks
 
 
 def main():
@@ -245,10 +261,11 @@ def main():
                             pos = i + len(r['text'])
                     t = modernize(t, eth)
                     head = bool(p.get('heading'))
-                    ss = segments(t)
+                    ss, mk = segments(t)
                     stats['segs'] += len(ss)
-                    sp.append({'h': head, 's': ss})
-                tt = segments(modernize(title, eth)) if (title and k != 'b') else []
+                    stats['marks'] += sum(1 for x in mk if x)
+                    sp.append({'h': head, 's': ss, 'm': mk})
+                tt = segments(modernize(title, eth))[0] if (title and k != 'b') else []
                 seg_units.append({'b': code, 'r': u['range'], 'k': k, 't': tt, 'tb': title if k == 'b' else '', 'p': sp})
         with open(os.path.join(out, code + '.json'), 'w', encoding='utf-8') as fh:
             json.dump({'b': code, 'u': app}, fh, ensure_ascii=False, separators=(',', ':'))

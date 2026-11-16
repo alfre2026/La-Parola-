@@ -33,12 +33,13 @@ def main():
             e['t'] = title
         paras = []
         for src, segs in zip(u['p'], tr['p']):
-            t = tidy(' '.join(segs))
+            marks = src.get('m') or [''] * len(segs)
+            t = tidy(' '.join((m + ' ' + s).strip() for m, s in zip(marks, segs)))
             if t:
                 paras.append(('# ' if src['h'] else '') + t)
         e['p'] = paras
         if pilot:
-            e['en'] = [' '.join(p['s']) for p in u['p']]
+            e['en'] = [' '.join((m + ' ' + s).strip() for m, s in zip(p.get('m') or [''] * len(p['s']), p['s'])) for p in u['p']]
         books.setdefault(u['b'], []).append(e)
     if pilot:
         with open(pilot, 'w', encoding='utf-8') as fh:

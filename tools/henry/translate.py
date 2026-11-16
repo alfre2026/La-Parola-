@@ -35,6 +35,7 @@ def main():
         texts.update(S[i]['t'])
         for p in S[i]['p']:
             texts.update(p['s'])
+    texts.discard('')
     texts = sorted(texts, key=len)
     total_chars = sum(len(t) for t in texts)
     print(f'blocco {k}/{n}: {len(pick)} unità, {len(texts)} frasi, {total_chars} caratteri', flush=True)
@@ -66,6 +67,7 @@ def main():
             print(f'  {chars}/{total_chars} car. ({100 * chars / total_chars:.1f}%) · {rate:.0f} car/s · '
                   f'mancano {eta / 60:.0f} min', flush=True)
 
+    done[''] = ''
     out = {}
     for i in pick:
         u = S[i]
