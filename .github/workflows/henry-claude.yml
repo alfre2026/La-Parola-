@@ -1,0 +1,81 @@
+# Matthew Henry: traduzione italiana accurata con Claude (API «Message Batches» di Anthropic).
+# Parte da sola quando nel repository c'è il segreto ANTHROPIC_API_KEY (controllo ogni 2 ore):
+# invia il testo inglese a Claude, sostituisce mh/it unità per unità e si ferma quando ha finito
+# (tools/henry/claude/state.json). Modello e tetto di spesa: CLAUDE_MODEL e MAX_USD qui sotto.
+name: Matthew Henry con Claude
+on:
+  schedule:
+    - cron: '23 */2 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: henry-claude
+  cancel-in-progress: false
+env:
+  DATASET_COMMIT: 59b152cd125fdd3ab20522debde033bef09162fa
+  CLAUDE_MODEL: claude-sonnet-5-5
+  MAX_USD: '120'
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    steps:
+      - name: Chiave API
+        id: key
+        env:
+          K: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$K" ]; then echo "Manca il segreto ANTHROPIC_API_KEY: niente da fare."; echo "go=0" >> "$GITHUB_OUTPUT"; else echo "go=1" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.key.outputs.go == '1'
+        uses: actions/checkout@v4
+      - name: Già finito?
+        id: st
+        if: steps.key.outputs.go == '1'
+        run: |
+          if [ -f tools/henry/claude/state.json ] && python3 -c "import json,sys; sys.exit(0 if json.load(open('tools/henry/claude/state.json')).get('finished') else 1)"; then
+            echo "Traduzione con Claude già completata."; echo "go=0" >> "$GITHUB_OUTPUT"
+          else echo "go=1" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.st.outputs.go == '1'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Testo inglese (CrossWire MHC)
+        if: steps.st.outputs.go == '1'
+        run: |
+          git clone -q --filter=blob:none --no-checkout https://github.com/samueldotj/bible-commentaries ds
+          (cd ds && git sparse-checkout set --no-cone /en/henry/ && git checkout -q "$DATASET_COMMIT")
+          python tools/henry/build.py ds/en/henry /tmp/en --segs work/segs.json
+          python tools/henry/claude.py estimate work/segs.json mh/it
+      - name: Invio a Claude (se serve)
+        if: steps.st.outputs.go == '1'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python tools/henry/claude.py submit work/segs.json mh/it tools/henry/claude/state.json
+      - name: Salva lo stato
+        if: steps.st.outputs.go == '1'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/henry/claude
+          git diff --cached --quiet || git commit -q -m "Matthew Henry con Claude: stato del lotto"
+          for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 10; done
+      - name: Attesa dei risultati
+        if: steps.st.outputs.go == '1'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python tools/henry/claude.py collect work/segs.json mh/it tools/henry/claude/state.json 300
+      - name: Salva la traduzione
+        if: steps.st.outputs.go == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python tools/henry/fix_it.py mh/en mh/it
+          python tools/henry/version.py mh
+          git add mh tools/henry/claude
+          if ! git diff --cached --quiet; then
+            git commit -q -m "Matthew Henry: traduzione italiana con Claude"
+            for i in 1 2 3; do git pull -q --rebase && git push -q && break; sleep 10; done
+            gh api -X POST "repos/${{ github.repository }}/pages/builds" >/dev/null 2>&1 || true
+          fi

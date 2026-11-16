@@ -259,14 +259,16 @@ def main():
                             stats['refs'] += 1
                         else:
                             pos = i + len(r['text'])
+                    orig = t                     # originale con i riferimenti già in italiano (per tools/henry/claude.py)
                     t = modernize(t, eth)
                     head = bool(p.get('heading'))
                     ss, mk = segments(t)
                     stats['segs'] += len(ss)
                     stats['marks'] += sum(1 for x in mk if x)
-                    sp.append({'h': head, 's': ss, 'm': mk})
+                    sp.append({'h': head, 's': ss, 'm': mk, 'x': orig})
                 tt = segments(modernize(title, eth))[0] if (title and k != 'b') else []
-                seg_units.append({'b': code, 'r': u['range'], 'k': k, 't': tt, 'tb': title if k == 'b' else '', 'p': sp})
+                seg_units.append({'b': code, 'r': u['range'], 'k': k, 't': tt, 'tb': title if k == 'b' else '',
+                                  'te': title if k != 'b' else '', 'p': sp})
         with open(os.path.join(out, code + '.json'), 'w', encoding='utf-8') as fh:
             json.dump({'b': code, 'u': app}, fh, ensure_ascii=False, separators=(',', ':'))
     if segs_out:

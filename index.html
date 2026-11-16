@@ -1186,7 +1186,7 @@ function commRes() {
     else { const n = norm(q); for (const c of C.list) for (const e of c.entries) if (entNorm(e).includes(n)) res.push({ c, e }); res = res.slice(0, 60); }
     h = `<div class="mut" style="padding:10px 16px 0">${res.length} risultat${res.length === 1 ? 'o' : 'i'}${r ? ' per ' + esc(refLabel(r)) : ''}${r ? ' nei tuoi commentari' : ''}</div>` + (r ? `<div class="card tap" data-act="mhref" data-r="${r.bk},${r.c1},${r.v1},${r.c2},${r.v2}"><div class="row w"><span class="ref">${esc(refLabel(r))}</span><span class="mut">${MH_NAME}</span></div><div class="mut" style="margin-top:3px">${MH_SUB} · apri la sezione che tratta questi versetti</div></div>` : '') + res.slice(0, 100).map(x => entryCard(x.c, x.e)).join('') + (res.length > 100 ? `<div class="mut" style="padding:8px 16px">Mostro le prime 100: restringi la ricerca.</div>` : '');
   } else {
-    h = `<div class="card tap" data-act="mhbrowse"><h3>${MH_NAME}</h3><div class="mut">${MH_SUB} · tutta la Bibbia · italiano (traduzione automatica) e originale inglese</div></div>` + (C.list.length ? C.list.map(c => `<div class="card tap" data-act="comopen" data-id="${c.id}"><h3>${esc(c.title)}</h3><div class="mut">${c.author ? esc(c.author) + ' · ' : ''}${c.entries.length} sezion${c.entries.length === 1 ? 'e' : 'i'}${!c.key && c.entries.some(e => !e.refs.length) ? ' · ' + c.entries.filter(e => !e.refs.length).length + ' da associare' : ''}</div></div>`).join('') : `<div class="empty" style="padding-top:18px">Aggiungi un tuo commentario (testo incollato o file): le sezioni che iniziano con un riferimento, per esempio «Giovanni 3:16-21», si collegano da sole ai versetti. Poi, nel testo, tocca un versetto e «Commentario».</div>`);
+    h = `<div class="card tap" data-act="mhbrowse"><h3>${MH_NAME}</h3><div class="mut">${MH_SUB} · tutta la Bibbia · in italiano e nell’originale inglese</div></div>` + (C.list.length ? C.list.map(c => `<div class="card tap" data-act="comopen" data-id="${c.id}"><h3>${esc(c.title)}</h3><div class="mut">${c.author ? esc(c.author) + ' · ' : ''}${c.entries.length} sezion${c.entries.length === 1 ? 'e' : 'i'}${!c.key && c.entries.some(e => !e.refs.length) ? ' · ' + c.entries.filter(e => !e.refs.length).length + ' da associare' : ''}</div></div>`).join('') : `<div class="empty" style="padding-top:18px">Aggiungi un tuo commentario (testo incollato o file): le sezioni che iniziano con un riferimento, per esempio «Giovanni 3:16-21», si collegano da sole ai versetti. Poi, nel testo, tocca un versetto e «Commentario».</div>`);
   }
   box.innerHTML = h + (q ? '' : `<button class="btn fab" data-act="comadd">${ic('plus')} Aggiungi commentario</button>`);
 }
@@ -1295,7 +1295,7 @@ ACT.comments = () => {
       return mhView(d);
     }
     const g = groups.find(y => y.c.id === d.ctx.cid);
-    if (!g) return `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>Scegli il commentario · ${lab}</h2></div>${groups.map(y => `<div class="card tap" data-act="cchoose" data-id="${y.c.id}"><h3>${esc(y.c.title)}</h3><div class="mut">${y.c.author ? esc(y.c.author) + ' · ' : ''}${y.list.length} sezion${y.list.length === 1 ? 'e tratta' : 'i trattano'} questi versetti</div></div>`).join('')}<div class="card tap" data-act="cchoose" data-id="mh"><h3>${MH_NAME}</h3><div class="mut">${MH_SUB} · ${mhLang() === 'it' ? 'traduzione automatica' : 'testo originale inglese'}</div></div>${extra}`;
+    if (!g) return `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>Scegli il commentario · ${lab}</h2></div>${groups.map(y => `<div class="card tap" data-act="cchoose" data-id="${y.c.id}"><h3>${esc(y.c.title)}</h3><div class="mut">${y.c.author ? esc(y.c.author) + ' · ' : ''}${y.list.length} sezion${y.list.length === 1 ? 'e tratta' : 'i trattano'} questi versetti</div></div>`).join('')}<div class="card tap" data-act="cchoose" data-id="mh"><h3>${MH_NAME}</h3><div class="mut">${MH_SUB} · ${mhLang() === 'it' ? 'in italiano' : 'testo originale inglese'}</div></div>${extra}`;
     const best = g.list[0], rest = g.list.slice(1), e = best.e;
     return `<div class="pg-head"><button class="ib" data-act="cback">${ic('back')}</button><h2>${esc(g.c.title)} · ${lab}</h2></div>
     <div class="pad" style="padding-bottom:0"><div class="row w"><span class="ref">${e.refs.length ? esc(e.refs.map(refLabel).join(' · ')) : ''}</span><button class="btn sec sm" data-act="entopen" data-cid="${g.c.id}" data-eid="${e.id}">${ic('pen')} Apri / modifica</button></div>${e.title ? `<h3 style="margin:8px 0 0">${esc(e.title)}</h3>` : ''}${srcNote(e)}</div>
@@ -1328,12 +1328,14 @@ ACT.cpicke = (el, e, d) => { const en = CM(d.ctx.cid).entries.find(x => x.id ===
 
 /* ============ Matthew Henry: commentario completo, incorporato ============
    Commentary on the Whole Bible (1706–1721, pubblico dominio; testo del modulo CrossWire «MHC»).
-   Un file per libro: ./mh/it/<LIBRO>.json (traduzione automatica) e ./mh/en/<LIBRO>.json (originale),
+   Un file per libro: ./mh/it/<LIBRO>.json (italiano: unità con c:1 tradotte con Claude, le altre con OPUS-MT) e ./mh/en/<LIBRO>.json (originale),
    {b, u:[{r:'JHN.3.1-21', k:'b'|'c'|'p', t:titolo, p:[paragrafi]}]} (k: introduzione al libro, al capitolo, sezione).
    Un libro si scarica la prima volta che si apre e resta in IndexedDB (chiave mh:<lingua>:<LIBRO>). */
 const MH_CODES = 'GEN EXO LEV NUM DEU JOS JDG RUT 1SA 2SA 1KI 2KI 1CH 2CH EZR NEH EST JOB PSA PRO ECC SNG ISA JER LAM EZK DAN HOS JOL AMO OBA JON MIC NAM HAB ZEP HAG ZEC MAL MAT MRK LUK JHN ACT ROM 1CO 2CO GAL EPH PHP COL 1TH 2TH 1TI 2TI TIT PHM HEB JAS 1PE 2PE 1JN 2JN 3JN JUD REV'.split(' ');
 const MH_NAME = 'Matthew Henry', MH_SUB = 'Commentario completo (1706–1721)';
-const MH_SRC = 'Matthew Henry, <i>An Exposition of the Old and New Testaments</i> (Commentary on the Whole Bible), 1706–1721: l’opera intera, non la versione ridotta; da Romani all’Apocalisse fu completata da altri ministri sui suoi appunti. Pubblico dominio (testo CrossWire «MHC»). Traduzione italiana automatica con OPUS-MT (Helsinki-NLP, CC BY 4.0): può contenere errori, nei passi dubbi confronta con l’originale inglese.';
+const MH_SRC = 'Matthew Henry, <i>An Exposition of the Old and New Testaments</i> (Commentary on the Whole Bible), 1706–1721: l’opera intera, non la versione ridotta; da Romani all’Apocalisse fu completata da altri ministri sui suoi appunti. Pubblico dominio (testo CrossWire «MHC»).';
+const mhTrNote = u => u && u.c ? 'Traduzione italiana fatta con Claude (Anthropic) sull’originale inglese, con nomi e citazioni come nella Nuova Riveduta 2006.' : 'Traduzione italiana automatica provvisoria (OPUS-MT, Helsinki-NLP, CC BY 4.0): può contenere errori; sarà sostituita dalla traduzione fatta con Claude. Nei passi dubbi confronta con l’originale inglese.';
+const mhTrTag = u => u && u.c ? 'tradotto con Claude' : 'traduzione automatica provvisoria';
 const MHC = new Map();   /* ultimi libri aperti, in memoria */
 const mhLang = () => D.settings.mhLang === 'en' ? 'en' : 'it';
 function mhParse(book) {   /* a ogni unità: indice e versetti trattati (c1:v1 – c2:v2); introduzione al libro: c1 = 0 */
@@ -1344,19 +1346,45 @@ function mhParse(book) {   /* a ogni unità: indice e versetti trattati (c1:v1 �
   });
   return book;
 }
+/* versioni dei file sul sito (mh/version.json): un libro già sul telefono si riscarica se è cambiato
+   (per esempio quando la traduzione con Claude sostituisce quella automatica) */
+let _mhv = null, _mhs = null, _mhvFail = 0;
+function mhVersions() {
+  if (_mhv) return _mhv;
+  if (navigator.onLine === false || Date.now() - _mhvFail < 20000) return Promise.resolve(null);   /* senza rete: si usa ciò che è sul telefono */
+  return _mhv = (async () => {
+    try {
+      const ac = new AbortController(), t = setTimeout(() => ac.abort(), 5000);
+      const r = await fetch('./mh/version.json', { cache: 'no-cache', signal: ac.signal }); clearTimeout(t);
+      if (r.ok) return await r.json();
+    } catch (e) {}
+    _mhvFail = Date.now(); _mhv = null; return null;
+  })();
+}
+async function mhSaved() { if (!_mhs) { try { _mhs = (KV.db && await KV.get('mh:saved')) || {}; } catch (e) { _mhs = {}; } } return _mhs; }
+async function mhStore(lang, code, b, ver) {
+  if (!KV.db) return;
+  const p = KV.set('mh:' + lang + ':' + code, b), s = await mhSaved();
+  (s[lang] = s[lang] || {})[code] = ver || '?'; await p; await KV.set('mh:saved', s);
+}
+const mhVer = (v, lang, code) => (v && v[lang] && v[lang][code]) || '';
 async function mhFetch(lang, code) {
   let res;
-  try { res = await fetch(`./mh/${lang}/${code}.json`); }
+  try { res = await fetch(`./mh/${lang}/${code}.json`, { cache: 'no-cache' }); }
   catch (e) { throw new Error('Serve internet la prima volta che apri Matthew Henry su questo libro: poi resta sul telefono.'); }
   if (!res.ok) throw new Error(res.status === 404 && lang === 'it' ? 'La traduzione italiana di questo libro non è ancora pronta.' : 'Download non riuscito (' + res.status + ').');
   return res.json();
 }
 async function mhLoad(bk, lang) {
-  const code = MH_CODES[bk], key = lang + ':' + code;
-  if (MHC.has(key)) { const b = MHC.get(key); MHC.delete(key); MHC.set(key, b); return b; }
-  let b = null;
+  const code = MH_CODES[bk], key = lang + ':' + code, want = mhVer(await mhVersions(), lang, code);
+  if (MHC.has(key)) { const b = MHC.get(key); MHC.delete(key); if (!want || b.ver === want) { MHC.set(key, b); return b; } }
+  let b = null, old = null;
   try { b = KV.db ? await KV.get('mh:' + key) : null; } catch (e) {}
-  if (!b) { b = await mhFetch(lang, code); if (KV.db) KV.set('mh:' + key, b).catch(() => {}); }
+  if (b) { b.ver = ((await mhSaved())[lang] || {})[code] || ''; if (want && b.ver !== want) { old = b; b = null; } }
+  if (!b) {
+    try { b = await mhFetch(lang, code); b.ver = want; mhStore(lang, code, b, want).catch(() => {}); }
+    catch (e) { if (!old) throw e; b = old; }   /* senza rete resta la copia già sul telefono */
+  }
   mhParse(b); MHC.set(key, b); while (MHC.size > 6) MHC.delete(MHC.keys().next().value);
   return b;
 }
@@ -1416,11 +1444,11 @@ function mhView(d) {
   const others = (m.others || []).map(r => book.u.find(x => x.r === r)).filter(x => x && x !== u);
   const tools = `<div class="chips" style="align-items:center">${mhSeg(lang)}${ci ? `<button class="chip" data-act="mhgo" data-i="${ci.i}">Introduzione al cap. ${ci.c1}</button>` : ''}${bi ? `<button class="chip" data-act="mhgo" data-i="${bi.i}">Introduzione al libro</button>` : ''}${fx > 0 ? `<button class="chip" data-act="mhfx">${ic('down')} v. ${m.fv}</button>` : ''}<button class="chip" data-act="mhcopy">${ic('copy')} Copia</button></div>`;
   return head(`${MH_NAME} · ${lab}`) + tools +
-    `<div class="pad" style="padding-bottom:0"><span class="ref">${esc(lab)}</span>${u.t && u.c1 ? `<h3 style="margin:6px 0 0;font-family:var(--serif);font-size:calc(var(--fs) * 1.1)">${esc(u.t)}</h3>` : ''}<div class="mut" style="margin-top:4px">${nw.toLocaleString('it-IT')} parole · ${lang === 'it' ? 'traduzione automatica' : 'testo originale'}</div></div>
+    `<div class="pad" style="padding-bottom:0"><span class="ref">${esc(lab)}</span>${u.t && u.c1 ? `<h3 style="margin:6px 0 0;font-family:var(--serif);font-size:calc(var(--fs) * 1.1)">${esc(u.t)}</h3>` : ''}<div class="mut" style="margin-top:4px">${nw.toLocaleString('it-IT')} parole · ${lang === 'it' ? mhTrTag(u) : 'testo originale'}</div></div>
     <div class="pad body mh"${lang === 'en' ? ' lang="en"' : ''}>${u.p.map((t, i) => mhParaHTML(t, bk, u.c1, i, i === fx)).join('')}</div>
     <div class="mhnav"><button data-act="mhgo" data-i="${m.idx - 1}" ${prev ? '' : 'disabled'}>${ic('left')} ${prev ? esc(mhShort(prev)) : ''}</button><button data-act="mhgo" data-i="${m.idx + 1}" ${next ? '' : 'disabled'}>${next ? esc(mhShort(next)) : ''} ${ic('right')}</button></div>
     ${others.length ? `<div class="sech" style="padding:0 14px">Altre sezioni su questi versetti</div>${others.map(o => `<div class="card tap" data-act="mhgo" data-i="${o.i}"><span class="ref">${esc(mhLabel(bk, o))}</span>${o.t ? `<div style="font-weight:650;margin-top:3px">${esc(o.t)}</div>` : ''}</div>`).join('')}` : ''}
-    <div class="mhsrc">${MH_SRC}</div>${d.ctx.mhExtra || ''}`;
+    <div class="mhsrc">${MH_SRC}${lang === 'it' ? ' ' + mhTrNote(u) : ''}</div>${d.ctx.mhExtra || ''}`;
 }
 /* alla prima apertura scorre fino al paragrafo sul versetto scelto */
 function mhMount(d) {
@@ -1440,7 +1468,7 @@ ACT.mhlang = (el, e, d) => {
 };
 ACT.mhcopy = async (el, e, d) => {
   const m = d.ctx.mh, u = mhCur(d); if (!u) return;
-  const t = `${MH_NAME} — ${mhLabel(m.bk, u)}${u.t && u.c1 ? '\n' + u.t : ''}\n\n${u.p.map(p => p.replace(/^# /, '')).join('\n\n')}\n\n(Matthew Henry, Commentary on the Whole Bible${m.lang === 'it' ? '; traduzione automatica' : ''})`;
+  const t = `${MH_NAME} — ${mhLabel(m.bk, u)}${u.t && u.c1 ? '\n' + u.t : ''}\n\n${u.p.map(p => p.replace(/^# /, '')).join('\n\n')}\n\n(Matthew Henry, Commentary on the Whole Bible${m.lang === 'it' ? (u.c ? '; traduzione con Claude' : '; traduzione automatica') : ''})`;
   toast((await copyText(t)) ? 'Copiato negli appunti' : 'Impossibile copiare');
 };
 /* sfoglia: libri → capitoli → sezioni */
@@ -1451,7 +1479,7 @@ function mhBrowse(d) {
   const head = (t, act) => `<div class="pg-head"><button class="ib" data-act="${act}" aria-label="Indietro">${ic('back')}</button><h2>${esc(t)}</h2></div>`;
   if (c.bk == null) {
     const grid = (a, b) => `<div class="bkgrid">${BOOKS.slice(a, b).map((x, i) => `<button data-act="mhbk" data-bk="${i + a}">${esc(x.n)}</button>`).join('')}</div>`;
-    return head(`${MH_NAME} · ${MH_SUB}`, 'close') + `<div class="card"><div style="line-height:1.55">L’opera intera, non la versione ridotta: introduzioni ai libri e ai capitoli e commento di tutti i versetti, dalla Genesi all’Apocalisse.</div><div class="row w" style="margin-top:10px">${mhSeg(lang)}<span class="mut">${lang === 'it' ? 'traduzione automatica' : 'testo originale'}</span></div><div class="row w" style="margin-top:12px"><button class="btn sec sm" data-act="mhdl">${ic('down2')} Scarica tutto (senza internet)</button><button class="btn sec sm" data-act="mhdel">${ic('trash')} Elimina</button></div><div class="mut" id="mhdls" style="margin-top:8px">${mhDL ? '' : 'Ogni libro si scarica da solo la prima volta che lo apri.'}</div></div>
+    return head(`${MH_NAME} · ${MH_SUB}`, 'close') + `<div class="card"><div style="line-height:1.55">L’opera intera, non la versione ridotta: introduzioni ai libri e ai capitoli e commento di tutti i versetti, dalla Genesi all’Apocalisse.</div><div class="row w" style="margin-top:10px">${mhSeg(lang)}<span class="mut" id="mhtr">${lang === 'it' ? 'italiano' : 'testo originale'}</span></div><div class="row w" style="margin-top:12px"><button class="btn sec sm" data-act="mhdl">${ic('down2')} Scarica tutto (senza internet)</button><button class="btn sec sm" data-act="mhdel">${ic('trash')} Elimina</button></div><div class="mut" id="mhdls" style="margin-top:8px">${mhDL ? '' : 'Ogni libro si scarica da solo la prima volta che lo apri.'}</div></div>
       <div class="pad" style="padding-top:0"><div class="sech">Antico Testamento</div>${grid(0, 39)}<div class="sech">Nuovo Testamento</div>${grid(39, 66)}</div><div class="mhsrc">${MH_SRC}</div>`;
   }
   const book = mhNeed(d, c.bk, lang);
@@ -1475,22 +1503,25 @@ ACT.mhup = (el, e, d) => {
 };
 async function mhSavedCount(d) {
   try {
-    const lang = mhLang(), n = (await KV.keys()).filter(k => String(k).startsWith('mh:' + lang + ':')).length, s = d.querySelector('#mhdls');
-    if (s && !mhDL && n) s.textContent = n >= 66 ? 'Tutti i 66 libri sono sul telefono: funziona anche senza internet.' : `${n} libr${n === 1 ? 'o' : 'i'} su 66 già sul telefono; gli altri si scaricano quando li apri.`;
+    const lang = mhLang(), v = await mhVersions(), sv = (await mhSaved())[lang] || {}, s = d.querySelector('#mhdls');
+    const n = MH_CODES.filter(c => sv[c] && (!v || sv[c] === mhVer(v, lang, c))).length, old = v ? MH_CODES.filter(c => sv[c] && sv[c] !== mhVer(v, lang, c)).length : 0;
+    const t = d.querySelector('#mhtr');
+    if (t && lang === 'it' && v) t.textContent = v.claude >= 5484 ? 'tradotto con Claude' : v.claude ? `tradotto con Claude: ${Math.floor(v.claude / 54.84)}%, il resto è provvisorio` : 'traduzione automatica provvisoria';
+    if (s && !mhDL && (n || old)) s.textContent = (n >= 66 ? 'Tutti i 66 libri sono sul telefono: funziona anche senza internet.' : `${n} libr${n === 1 ? 'o' : 'i'} su 66 già sul telefono; gli altri si scaricano quando li apri.`) + (old ? ` ${old} con una versione nuova: tocca «Scarica tutto» per aggiornarli.` : '');
   } catch (e) {}
 }
 let mhDL = null;
 ACT.mhdl = async (el, e, d) => {
   if (mhDL) return;
   if (!KV.db) return toast('Su questo telefono non si può salvare il commentario');
-  const lang = mhLang(), have = new Set((await KV.keys()).filter(k => String(k).startsWith('mh:' + lang + ':')).map(k => String(k).split(':')[2]));
-  const todo = MH_CODES.filter(c => !have.has(c));
+  const lang = mhLang(), v = await mhVersions(), sv = (await mhSaved())[lang] || {};
+  const todo = MH_CODES.filter(c => !sv[c] || (v && sv[c] !== mhVer(v, lang, c)));
   if (!todo.length) return toast('Matthew Henry è già tutto sul telefono');
   mhDL = { done: 0, n: todo.length };
   const st = () => { const s = d.querySelector('#mhdls'); if (s) s.innerHTML = `<div class="prog"><b style="width:${Math.round(mhDL.done / mhDL.n * 100)}%"></b></div>Scarico ${mhDL.done} di ${mhDL.n} libri…`; };
   st(); let err = null;
   for (const code of todo) {
-    try { await KV.set('mh:' + lang + ':' + code, await mhFetch(lang, code)); } catch (x) { err = x; break; }
+    try { await mhStore(lang, code, await mhFetch(lang, code), mhVer(v, lang, code)); MHC.delete(lang + ':' + code); } catch (x) { err = x; break; }
     mhDL.done++; st();
   }
   const n = mhDL.done; mhDL = null;
@@ -1500,7 +1531,7 @@ ACT.mhdl = async (el, e, d) => {
 ACT.mhdel = async (el, e, d) => {
   if (!confirmed(el, 'Sicuro?', 'Toglie Matthew Henry dal telefono: si riscarica quando lo riapri.')) return;
   for (const k of (await KV.keys()).filter(k => String(k).startsWith('mh:'))) await KV.del(k);
-  MHC.clear(); toast('Matthew Henry tolto dal telefono'); if (d.isConnected) refreshLayer(d);
+  MHC.clear(); _mhs = {}; toast('Matthew Henry tolto dal telefono'); if (d.isConnected) refreshLayer(d);
 };
 ACT.mhref = el => { const [bk, c1, v1, , v2] = el.dataset.r.split(',').map(Number); const vs = []; if (!(v1 === 1 && v2 === 999)) for (let v = v1; v <= Math.min(v2, v1 + 60); v++) vs.push(v); openMH(bk, c1, vs.length ? vs : null); };
 
