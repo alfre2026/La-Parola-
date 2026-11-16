@@ -41,7 +41,7 @@ svg.ink{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:non
 .vs.flash{animation:fl 2.2s ease-out}
 @keyframes fl{0%,40%{background:var(--flash)}100%{background:transparent}}
 .w.pk{outline:2px solid var(--acc);border-radius:3px}
-.selh{position:absolute;width:48px;height:54px;margin-left:-24px;z-index:6;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;display:none}
+.selh{position:absolute;width:48px;height:54px;margin-left:-24px;z-index:6;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;left:0;top:0;visibility:hidden}
 .selh i{position:absolute;left:50%;top:0;width:3px;height:9px;margin-left:-1.5px;background:var(--acc)}
 .selh b{position:absolute;left:50%;top:7px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:var(--acc);box-shadow:0 1px 5px rgba(0,0,0,.4);border:2px solid #fff}
 .ni{display:inline-flex;vertical-align:-3px;margin:0 2px 0 5px;width:24px;height:24px;border-radius:7px;background:var(--accsoft);color:var(--acc);align-items:center;justify-content:center;position:relative}
@@ -163,6 +163,7 @@ mark{background:#ffe27a;color:#222;border-radius:3px}
       <button class="ib" data-act="aa" aria-label="Aspetto"><svg class="i"><use href="#i-type"/></svg></button>
     </div>
     <article id="text"></article>
+    <div id="shpad"></div>
     <div id="chnav"></div>
   </section>
   <section id="v-ser" class="view"></section>
@@ -223,7 +224,14 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const ic = (n, cls = '') => `<svg class="i ${cls}"><use href="#i-${n}"/></svg>`;
 const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 2200); }
+function toast(m) { const t = $('#toast'); t.style.pointerEvents = ''; t.onclick = null; t.textContent = m; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 2200); }
+/* avviso con azione (tocco sull'avviso) */
+function toastAction(m, fn, ms = 9000) {
+  const t = $('#toast'); t.textContent = m; t.classList.add('on'); t.style.pointerEvents = 'auto'; t.onclick = fn;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { t.classList.remove('on'); t.style.pointerEvents = ''; t.onclick = null; }, ms);
+}
+/* rinvia a un momento di quiete (per lavori non urgenti) */
+const idle = f => (window.requestIdleCallback ? requestIdleCallback(f, { timeout: 4000 }) : setTimeout(() => f({ timeRemaining: () => 8 }), 60));
 /* conferma con doppio tocco (niente confirm/alert/prompt) */
 function confirmed(btn, q, msg) {
   if (btn.dataset.armed === '1') { clearTimeout(btn.armTimer); btn.dataset.armed = ''; return true; }
@@ -329,8 +337,9 @@ let C = { list: [] };           /* commentari */
 let BIBLE = null;               /* testo attivo: array di 66 {chapters:[[versi]]} */
 let BID = null;                 /* id versione attiva */
 let _st, _stc;
+let _commsRes; const commsReady = new Promise(r => _commsRes = r);   /* i commentari si caricano dopo la prima schermata: fino ad allora non si riscrivono */
 const save = () => { clearTimeout(_st); _st = setTimeout(() => KV.set('data', D), 250); };
-const saveC = () => { clearTimeout(_stc); _stc = setTimeout(() => KV.set('comms', C), 250); };
+const saveC = () => { clearTimeout(_stc); _stc = setTimeout(() => commsReady.then(() => KV.set('comms', C)), 250); };
 
 /* ============ strati (fogli e pagine) con tasto Indietro ============ */
 const layers = [];
@@ -368,7 +377,7 @@ const hasBook = bk => BIBLE && BIBLE[bk].chapters.length > 0;
 
 async function loadBible(id) {
   const t = await KV.get('bible:' + id); if (!t) return false;
-  BIBLE = t; BID = id; D.settings.bible = id; return true;
+  BIBLE = t; BID = id; D.settings.bible = id; setTimeout(warmNorm, 1500); return true;
 }
 function normalizeBible(raw) {
   if (raw && !Array.isArray(raw) && Array.isArray(raw.books)) raw = raw.books;
@@ -405,10 +414,10 @@ async function installBible(id, name, bible) {
 }
 
 /* ----- rendering ----- */
-function verseHTML(bk, ch, v, t) {
+function verseHTML(bk, ch, v, t, nts) {
   const ws = words(t), runs = D.hl[hkey(bk, ch, v)] || [], col = new Array(ws.length).fill(-1);
   runs.forEach(([a, b, c]) => { for (let i = a; i <= b && i < ws.length; i++) col[i] = c; });
-  const notes = D.notes.filter(n => n.bk === bk && n.ch === ch && n.v1 <= v && v <= n.v2), ends = notes.filter(n => n.v2 === v);
+  const notes = (nts || D.notes).filter(n => n.bk === bk && n.ch === ch && n.v1 <= v && v <= n.v2), ends = notes.filter(n => n.v2 === v);
   let h = `<span class="vs${D.marks[`${bk}.${ch}.${v}`] ? ' bm' : ''}${notes.length ? ' hasnote' : ''}" data-v="${v}"><sup class="vn">${v}</sup>`;
   const wsp = (w, i) => `<span class="w" data-i="${i}">${esc(w)}</span>`;
   for (let i = 0; i < ws.length;) {
@@ -421,16 +430,26 @@ function verseHTML(bk, ch, v, t) {
 }
 function renderReader() {
   const box = $('#text'), bk = S.bk, ch = S.ch;
+  DX = null;   /* il testo cambia: gli indici di elementi e posizioni si rifanno al primo uso */
   $('#refbtn').innerHTML = `${esc(BOOKS[bk].n)} ${ch} ${ic('down')}${BID ? `<small>${esc(bibleName())}</small>` : ''}`;
   if (!BIBLE) {
     box.innerHTML = `<div class="empty" style="font-family:system-ui"><h2>Installa una Bibbia</h2>Scarica la <b>Riveduta 2020</b> (richiede internet una volta sola, poi funziona offline) oppure importa il tuo file, per esempio la <b>Nuova Riveduta 2006</b>.<div style="display:grid;gap:10px;margin-top:18px"><button class="btn" data-act="dlrived">${ic('down2')} Scarica Riveduta 2020</button><button class="btn sec" data-act="impbible">${ic('up2')} Importa file (JSON o testo)</button></div></div>`;
     $('#chnav').innerHTML = ''; return;
   }
   const vs = (BIBLE[bk].chapters[ch - 1]) || [];
-  box.innerHTML = vs.length ? vs.map((t, i) => verseHTML(bk, ch, i + 1, t)).join('') : `<div class="empty" style="font-family:system-ui">Questo capitolo non è presente nella versione installata.</div>`;
+  const nts = D.notes.filter(n => n.bk === bk && n.ch === ch);
+  box.innerHTML = vs.length ? vs.map((t, i) => verseHTML(bk, ch, i + 1, t, nts)).join('') : `<div class="empty" style="font-family:system-ui">Questo capitolo non è presente nella versione installata.</div>`;
   const pv = prevCh(), nx = nextCh();
   $('#chnav').innerHTML = `<button data-act="prevch" ${pv ? '' : 'disabled'}>${ic('left')} Precedente</button><button data-act="nextch" ${nx ? '' : 'disabled'}>Successivo ${ic('right')}</button>`;
   paintSel(); inkSoon();
+}
+/* ridisegna solo i versetti cambiati (colore, segnalibro) invece dell'intero capitolo */
+function patchVerses(list) {
+  const X = domIndex();
+  if (!X || !BIBLE || list.some(v => !X.vs[v])) return renderReader();
+  const nts = D.notes.filter(n => n.bk === S.bk && n.ch === S.ch);
+  list.forEach(v => { X.vs[v].outerHTML = verseHTML(S.bk, S.ch, v, verseTxt(S.bk, S.ch, v), nts).slice(0, -1); });   /* via lo spazio finale: resta quello già nel testo */
+  DX = null; paintSel(); inkSoon();
 }
 function prevCh() { if (S.ch > 1) return [S.bk, S.ch - 1]; for (let b = S.bk - 1; b >= 0; b--) if (hasBook(b)) return [b, nCh(b)]; return null; }
 function nextCh() { if (S.ch < nCh(S.bk)) return [S.bk, S.ch + 1]; for (let b = S.bk + 1; b < 66; b++) if (hasBook(b)) return [b, 1]; return null; }
@@ -459,18 +478,47 @@ function targets() {
 }
 function selRefs() { return groupRuns(S.sel.verses).map(([a, b]) => rr(S.bk, S.ch, a, b)); }
 function selLabel() { const rs = selRefs(); return rs.map((r, i) => i === 0 ? refLabel(r) : (r.v1 === r.v2 ? r.v1 : `${r.v1}-${r.v2}`)).join(', '); }
+/* Indici del testo mostrato, rifatti solo quando il testo cambia (DX = null):
+   DX.vs[v] = versetto, DX.ws[v] = sue parole, DX.all = tutte le parole in ordine,
+   DX.rect = posizioni delle parole (misurate una sola volta, finché la pagina non cambia forma). */
+let DX = null, _pr = new Set(), _sv = new Set();
+function domIndex() {
+  if (DX) return DX;
+  const box = $('#text'); if (!box) return null;
+  const vs = {}, ws = {}, all = [];
+  box.querySelectorAll('.vs').forEach(e => { const v = +e.dataset.v, l = [...e.querySelectorAll('.w')]; vs[v] = e; ws[v] = l; l.forEach(w => { w._k = all.length; all.push(w); }); });
+  _pr = new Set(); _sv = new Set();   /* elementi nuovi: nessuna marcatura precedente */
+  return DX = { vs, ws, all, rect: null, own: null };
+}
+const layoutDirty = () => { if (DX) DX.rect = null; };
+function geom() {
+  const X = domIndex(); if (!X) return null;
+  if (X.rect) return X;
+  const box = $('#text'); if (!box || !box.offsetParent) return null;
+  const sx = scrollX, sy = scrollY, own = [], rect = [];
+  X.all.forEach((w, k) => { for (const r of w.getClientRects()) { own.push(k); rect.push(r.left + sx, r.top + sy, r.right + sx, r.bottom + sy); } });
+  X.own = own; X.rect = rect; return X;
+}
 function paintSel() {
-  $$('#text .vs').forEach(e => e.classList.toggle('sel', !!S.sel && S.sel.verses.has(+e.dataset.v)));
-  $$('#text .w.pk,#text .w.pr').forEach(e => e.classList.remove('pk', 'pr'));
-  if (S.sel && S.sel.words) {
-    const { a, b } = S.sel.words;
-    $$('#text .vs').forEach(vs => { const v = +vs.dataset.v; if (v < a.v || v > b.v) return;
-      $$('.w', vs).forEach(w => { const i = +w.dataset.i; if ((v > a.v || i >= a.i) && (v < b.v || i <= b.i)) w.classList.add('pr'); }); });
+  const X = domIndex();
+  if (X) {
+    const wantV = S.sel ? S.sel.verses : null;
+    _sv.forEach(v => { if (!wantV || !wantV.has(v)) { const e = X.vs[v]; if (e) e.classList.remove('sel'); } });
+    if (wantV) wantV.forEach(v => { if (!_sv.has(v)) { const e = X.vs[v]; if (e) e.classList.add('sel'); } });
+    _sv = wantV ? new Set(wantV) : new Set();
+    const want = new Set();
+    if (S.sel && S.sel.words) {
+      const { a, b } = S.sel.words;
+      for (let v = a.v; v <= b.v; v++) { const l = X.ws[v]; if (!l) continue; const from = v === a.v ? a.i : 0, to = v === b.v ? Math.min(b.i, l.length - 1) : l.length - 1; for (let i = from; i <= to; i++) want.add(l[i]); }
+    }
+    _pr.forEach(w => { if (!want.has(w)) w.classList.remove('pr'); });
+    want.forEach(w => { if (!_pr.has(w)) w.classList.add('pr'); });
+    _pr = want;
   }
   placeHandles();
 }
 /* maniglie per trascinare l'inizio e la fine della selezione di parole */
-const wordEl = p => $(`#text .vs[data-v="${p.v}"] .w[data-i="${p.i}"]`);
+const wordEl = p => { const X = domIndex(), l = X && X.ws[p.v]; return (l && l[p.i]) || null; };
 function wordRects(w) {
   const t = w.firstChild; if (!t || t.nodeType !== 3) return w.getClientRects();
   const r = document.createRange(); r.setStart(t, 0); r.setEnd(t, Math.max(1, t.data.trimEnd().length)); return r.getClientRects();
@@ -478,14 +526,15 @@ function wordRects(w) {
 function placeHandles() {
   const box = $('#text'); if (!box) return;
   let hs = $$(':scope > .selh', box);
-  if (!(S.sel && S.sel.words) || S.tab !== 'read') { hs.forEach(h => h.style.display = 'none'); return; }
+  /* le maniglie si spostano con transform e si nascondono con visibility: left/top o display obbligano il browser a rifare il layout di tutto il capitolo */
+  if (!(S.sel && S.sel.words) || S.tab !== 'read') { hs.forEach(h => h.style.visibility = 'hidden'); return; }
   if (hs.length < 2) { hs.forEach(h => h.remove()); hs = ['a', 'b'].map(k => { const h = document.createElement('div'); h.className = 'selh'; h.dataset.w = k; h.innerHTML = '<i></i><b></b>'; box.appendChild(h); return h; }); }
   const { a, b } = S.sel.words, bb = box.getBoundingClientRect();
   [[hs.find(h => h.dataset.w === 'a'), a, true], [hs.find(h => h.dataset.w === 'b'), b, false]].forEach(([h, p, start]) => {
-    const w = wordEl(p); if (!w) { h.style.display = 'none'; return; }
-    const rs = wordRects(w); if (!rs.length) { h.style.display = 'none'; return; }
+    const w = wordEl(p); if (!w) { h.style.visibility = 'hidden'; return; }
+    const rs = wordRects(w); if (!rs.length) { h.style.visibility = 'hidden'; return; }
     const r = start ? rs[0] : rs[rs.length - 1];
-    h.style.display = 'block'; h.style.left = ((start ? r.left : r.right) - bb.left) + 'px'; h.style.top = (r.bottom - bb.top - 2) + 'px';
+    h.style.visibility = 'visible'; h.style.transform = `translate(${((start ? r.left : r.right) - bb.left).toFixed(1)}px,${(r.bottom - bb.top - 2).toFixed(1)}px)`;
   });
 }
 function setSel(sel) { S.sel = sel; paintSel(); showSheet(); }
@@ -525,14 +574,14 @@ function onNativeSel() {
   const g = getSelection(); if (!g || !g.rangeCount || g.isCollapsed) return;
   const r = g.getRangeAt(0), box = $('#text'); if (!box || !box.contains(r.commonAncestorContainer) || S.tab !== 'read') return;
   lastSelAt = Date.now();
-  let first = null, last = null;
-  for (const w of $$('.w', box)) {
-    if (!r.intersectsNode(w)) continue;
-    const t = w.firstChild; if (!t) continue;
-    const end = t.data.trimEnd().length;
-    if (cmpPts(r.startContainer, r.startOffset, t, end) < 0 && cmpPts(r.endContainer, r.endOffset, t, 0) > 0) { if (!first) first = w; last = w; }
-  }
-  if (!first) return;
+  /* prima e ultima parola toccate dalla selezione: ricerca binaria sulle parole in ordine (prima si provavano tutte) */
+  const X = domIndex(), all = X ? X.all : []; let lo = 0, hi = all.length;
+  while (lo < hi) { const m = (lo + hi) >> 1, t = all[m].firstChild; if (cmpPts(r.startContainer, r.startOffset, t, t.data.trimEnd().length) < 0) hi = m; else lo = m + 1; }
+  const kf = lo; lo = 0; hi = all.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (cmpPts(r.endContainer, r.endOffset, all[m].firstChild, 0) > 0) lo = m + 1; else hi = m; }
+  const kl = lo - 1;
+  if (kf >= all.length || kl < 0 || kf > kl) return;
+  const first = all[kf], last = all[kl];
   const A = { v: +first.closest('.vs').dataset.v, i: +first.dataset.i }, B = { v: +last.closest('.vs').dataset.v, i: +last.dataset.i };
   const vs = new Set(); for (let x = A.v; x <= B.v; x++) vs.add(x);
   S.pick = null; S.extend = false;
@@ -542,7 +591,7 @@ document.addEventListener('selectionchange', () => { clearTimeout(selT); selT = 
 
 /* ----- pannello azioni ----- */
 let _shKey = '';
-function hideSheet() { const s = $('#sheet'); s.classList.remove('on'); s.innerHTML = ''; _shKey = ''; $('#text').style.paddingBottom = ''; }
+function hideSheet() { const s = $('#sheet'); s.classList.remove('on'); s.innerHTML = ''; _shKey = ''; $('#shpad').style.height = ''; }
 function commentsForSel() { return S.sel ? commentsFor(S.bk, S.ch, [...S.sel.verses]) : []; }
 function showSheet() {
   const s = S.sel; if (!s) return hideSheet();
@@ -565,15 +614,15 @@ function showSheet() {
   const sh = $('#sheet'); const wasOn = sh.classList.contains('on'); sh.classList.add('on');
   if (!wasOn) { sh.classList.add('fresh'); clearTimeout(showSheet.t); showSheet.t = setTimeout(() => sh.classList.remove('fresh'), 380); }
   if (html !== _shKey) { sh.innerHTML = html; _shKey = html; }
-  $('#text').style.paddingBottom = (sh.offsetHeight + 30) + 'px';
+  $('#shpad').style.height = Math.max(0, sh.offsetHeight - 10) + 'px';   /* spazio sotto il testo: un elemento a parte, così non si rifà il layout di tutto il capitolo */
 }
 function applyColor(ci) {
-  const bk = S.bk, ch = S.ch;
+  const bk = S.bk, ch = S.ch, touched = targets().map(t => t.v);
   targets().forEach(t => {
     const k = hkey(bk, ch, t.v), runs = paintRuns(D.hl[k] || [], t.ws, t.we, ci < 0 ? null : ci);
     if (runs.length) D.hl[k] = runs; else delete D.hl[k];
   });
-  save(); clearSel(); renderReader(); toast(ci < 0 ? 'Evidenziazione rimossa' : 'Evidenziato · visibile in Personale');
+  save(); clearSel(); patchVerses(touched); toast(ci < 0 ? 'Evidenziazione rimossa' : 'Evidenziato · visibile in Personale');
 }
 function paintRuns(runs, ws, we, ci) {
   const out = [];
@@ -638,7 +687,7 @@ ACT.extend = () => { S.pick = null; S.extend = !S.extend; showSheet(); };
 ACT.bm = () => {
   const keys = sortedVerses().map(v => `${S.bk}.${S.ch}.${v}`), all = keys.every(k => D.marks[k]);
   keys.forEach(k => { if (all) delete D.marks[k]; else D.marks[k] = Date.now(); });
-  save(); const s = S.sel; renderReader(); S.sel = s; paintSel(); showSheet(); toast(all ? 'Segnalibro rimosso' : 'Segnalibro aggiunto');
+  save(); patchVerses(sortedVerses()); showSheet(); toast(all ? 'Segnalibro rimosso' : 'Segnalibro aggiunto');
 };
 ACT.copy = async () => { toast((await copyText(selPlainText())) ? 'Copiato negli appunti' : 'Impossibile copiare'); };
 ACT.share = () => shareText(selPlainText(), selLabel());
@@ -650,13 +699,16 @@ ACT.gov = el => goto(+el.dataset.bk, +el.dataset.c, +el.dataset.v);
 
 /* ----- tocchi sul testo ----- */
 let lastTap = { t: 0, v: 0, i: -1 };
-function nearestWord(x, y) {
-  let best = null, bd = 1e9;
-  for (const w of $$('#text .w')) for (const r of w.getClientRects()) {
-    const dx = x < r.left ? r.left - x : x > r.right ? x - r.right : 0, dy = y < r.top ? r.top - y : y > r.bottom ? y - r.bottom : 0, d = Math.hypot(dx, dy);
-    if (d < bd) { bd = d; best = w; }
+function nearestWord(x, y) {   /* usa le posizioni già misurate: nessun ricalcolo del layout a ogni tocco o passo di trascinamento */
+  const X = geom(); if (!X) return null;
+  x += scrollX; y += scrollY;
+  const R = X.rect, own = X.own; let best = -1, bd = 1e18;
+  for (let j = 0, n = own.length; j < n; j++) {
+    const l = R[4 * j], t = R[4 * j + 1], r = R[4 * j + 2], b = R[4 * j + 3];
+    const dx = x < l ? l - x : x > r ? x - r : 0, dy = y < t ? t - y : y > b ? y - b : 0, d = dx * dx + dy * dy;
+    if (d < bd) { bd = d; best = j; }
   }
-  return best && { el: best, d: bd };
+  return best < 0 ? null : { el: X.all[own[best]], d: Math.sqrt(bd) };
 }
 $('#text').addEventListener('click', e => {
   if (e.target.closest('[data-act]') || e.target.closest('.selh')) return;
@@ -688,7 +740,8 @@ function dragStep() {
   if (!HD || !HD.pt) return;
   const sh = $('#sheet'), top = 80, bot = innerHeight - (sh && sh.classList.contains('on') ? sh.offsetHeight : 0) - 30, y = HD.pt.y;
   if (y < top) scrollBy(0, -Math.min(14, (top - y) / 5 + 4)); else if (y > bot) scrollBy(0, Math.min(14, (y - bot) / 5 + 4));
-  dragTo(HD.pt.x, HD.pt.y - HD.off);
+  const key = HD.pt.x + ',' + y + ',' + scrollY; if (key === HD.key) return;   /* dito e pagina fermi: niente da ricalcolare */
+  HD.key = key; dragTo(HD.pt.x, HD.pt.y - HD.off);
 }
 function dragMove(e) { if (!HD) return; e.preventDefault(); const t = e.touches[0]; HD.pt = { x: t.clientX, y: t.clientY }; dragTo(t.clientX, t.clientY - HD.off); }
 function dragBegin(h) { HD = h; HD.timer = setInterval(dragStep, 40); document.addEventListener('touchmove', dragMove, { passive: false }); }
@@ -749,10 +802,12 @@ function drawInk(box) {
   box.appendChild(svg);
 }
 let _inkT;
-function inkSoon() { clearTimeout(_inkT); _inkT = setTimeout(() => requestAnimationFrame(() => { if (S.tab === 'read') { drawInk($('#text')); placeHandles(); } }), 30); }
-addEventListener('resize', inkSoon);
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(inkSoon);
-if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', inkSoon);
+function inkSoon() { clearTimeout(_inkT); _inkT = setTimeout(() => requestAnimationFrame(() => { if (S.tab === 'read') { drawInk($('#text')); geom(); placeHandles(); } }), 30); }
+let _vw = innerWidth;
+addEventListener('resize', () => { if (innerWidth === _vw) return; _vw = innerWidth; layoutDirty(); inkSoon(); });   /* solo l'altezza cambia (tastiera, barra del browser): il testo non si sposta */
+const fontsChanged = () => { layoutDirty(); inkSoon(); };
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(fontsChanged);
+if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', fontsChanged);
 
 /* ----- Selettore libro/capitolo, ricerca, aspetto ----- */
 function openPicker() {
@@ -783,10 +838,28 @@ function openSearch() {
   d.mount = d => { const i = $('#sq', d); let t; i.oninput = () => { clearTimeout(t); t = setTimeout(() => runSearch(i.value, $('#sres', d)), 250); }; i.focus(); };
   d.mount(d);
 }
+/* testo dei versetti senza accenti e in minuscolo, calcolato una volta (a riposo, dopo l'avvio) e non a ogni ricerca */
+let _BN = null;
+function normIndex() {
+  if (_BN && _BN.src === BIBLE) return _BN.v;
+  const v = BIBLE.map(b => b.chapters.map(c => c.map(t => norm(t))));
+  _BN = { src: BIBLE, v }; return v;
+}
+let _warm = null;
+function warmNorm() {
+  const src = BIBLE; if (!src || (_BN && _BN.src === src) || _warm === src) return;
+  _warm = src; const v = []; let b = 0;
+  const step = dl => {
+    if (BIBLE !== src || (_BN && _BN.src === src)) return;
+    do { v[b] = src[b].chapters.map(c => c.map(t => norm(t))); b++; } while (b < 66 && dl.timeRemaining() > 3);
+    if (b < 66) idle(step); else _BN = { src, v };
+  };
+  idle(step);
+}
 function runSearch(q, box) {
   const terms = norm(q).split(/\s+/).filter(x => x.length > 1); if (!terms.length || !BIBLE) { box.innerHTML = ''; return; }
-  const res = []; let total = 0;
-  for (let b = 0; b < 66; b++) BIBLE[b].chapters.forEach((vs, ci) => vs.forEach((t, vi) => { const n = norm(t); if (terms.every(x => n.includes(x))) { total++; if (res.length < 120) res.push([b, ci + 1, vi + 1, t]); } }));
+  const res = [], N = normIndex(); let total = 0;
+  for (let b = 0; b < 66; b++) BIBLE[b].chapters.forEach((vs, ci) => vs.forEach((t, vi) => { const n = N[b][ci][vi]; if (terms.every(x => n.includes(x))) { total++; if (res.length < 120) res.push([b, ci + 1, vi + 1, t]); } }));
   const re = new RegExp('(' + terms.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'ig');
   box.innerHTML = `<div class="mut" style="margin-bottom:6px">${total} risultat${total === 1 ? 'o' : 'i'}${total > 120 ? ' (mostro i primi 120)' : ''}</div>` + res.map(([b, c, v, t]) => `<div class="sr" data-act="gov" data-bk="${b}" data-c="${c}" data-v="${v}"><span class="ref">${esc(refLabel(rr(b, c, v)))}</span><div style="font-family:var(--serif)">${esc(t).replace(re, '<mark>$1</mark>')}</div></div>`).join('');
 }
@@ -795,11 +868,12 @@ ACT.search = () => openSearch();
 function applyTheme() {
   document.documentElement.className = 't-' + (D.settings.theme || 'carta'); document.body.className = '';
   document.documentElement.style.setProperty('--fs', D.settings.size + 'px');
-  if (typeof inkSoon === 'function') inkSoon();
+  layoutDirty(); if (typeof inkSoon === 'function') inkSoon();
 }
 ACT.aa = () => openLayer('sheet', () => `<h2 class="t">Aspetto</h2><label class="l">Dimensione del testo: <span id="fsv">${D.settings.size}</span> px</label><input type="range" id="fs" min="15" max="32" value="${D.settings.size}"><label class="l">Tema</label><div class="seg" style="margin:0">${[['carta', 'Carta'], ['chiaro', 'Chiaro'], ['scuro', 'Scuro']].map(([k, n]) => `<button data-act="theme" data-k="${k}" class="${D.settings.theme === k ? 'on' : ''}">${n}</button>`).join('')}</div>`);
 ACT.theme = (el, e, d) => { D.settings.theme = el.dataset.k; save(); applyTheme(); $$('.seg button', d).forEach(b => b.classList.toggle('on', b === el)); };
-document.addEventListener('input', e => { if (e.target.id === 'fs') { D.settings.size = +e.target.value; $('#fsv').textContent = e.target.value; applyTheme(); save(); } });
+let _fsRaf = 0;
+document.addEventListener('input', e => { if (e.target.id === 'fs') { D.settings.size = +e.target.value; $('#fsv').textContent = e.target.value; if (!_fsRaf) _fsRaf = requestAnimationFrame(() => { _fsRaf = 0; applyTheme(); }); save(); } });
 
 /* ----- installazione Bibbia ----- */
 ACT.dlrived = async () => {
@@ -825,7 +899,7 @@ ACT.bsave = async (el, e, d) => {
   await installBible(id, name, d.ctx.bible); closeTop(); toast(name + ' installata');
 };
 /* ============ area personale ============ */
-const M = { sub: 'hl', color: -1, legend: false };
+const M = { sub: 'hl', color: -1, legend: false, n: 50 };
 const legendOf = i => (D.settings.legend && D.settings.legend[i]) || COLORS[i][0];
 function hlItems() {
   const items = [];
@@ -856,12 +930,12 @@ function renderMe() {
   <div class="seg">${[['hl', 'Evidenziati'], ['notes', 'Note'], ['marks', 'Segnalibri'], ['data', 'Dati']].map(([k, n]) => `<button data-act="mesub" data-k="${k}" class="${M.sub === k ? 'on' : ''}">${n}</button>`).join('')}</div>`;
   if (M.sub === 'hl') {
     const all = hlItems(), cnt = {}; all.forEach(i => cnt[i.c] = (cnt[i.c] || 0) + 1);
-    const items = M.color < 0 ? all : all.filter(i => i.c === M.color);
+    const items = M.color < 0 ? all : all.filter(i => i.c === M.color), pos = new Map(all.map((x, i) => [x, i]));
     h += `<div class="chips"><button class="chip ${M.color < 0 ? 'on' : ''}" data-act="mecolor" data-i="-1">Tutti · ${all.length}</button>${COLORS.map((c, i) => cnt[i] ? `<button class="chip ${M.color === i ? 'on' : ''}" data-act="mecolor" data-i="${i}"><i style="background:${c[1]}"></i>${esc(legendOf(i))} · ${cnt[i]}</button>` : '').join('')}<button class="chip" data-act="legend">${ic('pen')} Legenda</button></div>`;
     if (M.legend) h += `<div class="card"><div class="mut" style="margin-bottom:6px">Dai un significato ai colori (es. giallo = promesse). Si salva da solo.</div>${COLORS.map((c, i) => `<div class="lg"><i style="background:${c[1]}"></i><input type="text" data-leg="${i}" value="${esc(D.settings.legend[i] || '')}" placeholder="${c[0]}"></div>`).join('')}</div>`;
     if (!BID) h += `<div class="empty">Installa una Bibbia per vedere le evidenziazioni.</div>`;
     else if (!items.length) h += `<div class="empty"><h2>Nessuna evidenziazione</h2>Nel testo tocca un versetto, oppure tieni premuto su una parola e trascina per scegliere dove iniziare e finire, poi scegli un colore.<br><br><span class="mut">Le evidenziazioni sono legate alla versione attiva (${esc(bibleName())}).</span></div>`;
-    else h += items.map((it, i) => `<div class="card tap" data-act="hlitem" data-i="${all.indexOf(it)}"><div class="row"><i style="width:14px;height:14px;border-radius:50%;background:${COLORS[it.c][1]};border:1px solid rgba(0,0,0,.2);display:inline-block"></i><span class="ref">${esc(refLabel(itemRef(it)))}</span><span class="mut">${esc(legendOf(it.c))}</span></div><div class="hl-q">${hlQuote(it)}</div></div>`).join('');
+    else h += items.slice(0, M.n).map((it, i) => `<div class="card tap" data-act="hlitem" data-i="${pos.get(it)}"><div class="row"><i style="width:14px;height:14px;border-radius:50%;background:${COLORS[it.c][1]};border:1px solid rgba(0,0,0,.2);display:inline-block"></i><span class="ref">${esc(refLabel(itemRef(it)))}</span><span class="mut">${esc(legendOf(it.c))}</span></div><div class="hl-q">${hlQuote(it)}</div></div>`).join('') + (items.length > M.n ? `<div class="pad"><button class="btn sec block" data-act="mehlmore">Mostra altre evidenziazioni (${items.length - M.n})</button></div>` : '');
     me._all = all;
   }
   if (M.sub === 'notes') {
@@ -878,11 +952,20 @@ function renderMe() {
       <div class="sech" style="padding:0 14px">Backup</div><div class="card"><div class="row w"><button class="btn sec sm" data-act="bkexp">${ic('down2')} Scarica backup</button><button class="btn sec sm" data-act="bkimp">${ic('up2')} Ripristina</button></div><div class="mut" style="margin-top:8px">Il backup contiene evidenziazioni, note, segnalibri, sermoni e commentari (non il testo biblico). ${D.notes.length} note · ${Object.keys(D.hl).length} versetti evidenziati · ${D.sermons.length} sermoni · ${C.list.length} commentari.</div></div>`;
   }
   v.innerHTML = h;
-  $$('.hl-q', v).forEach(drawInk);
+  lazyInk(v);
+}
+/* l'inchiostro si disegna solo per le citazioni che stanno per comparire sullo schermo */
+let _io;
+function lazyInk(root) {
+  const qs = $$('.hl-q', root); if (_io) _io.disconnect(); if (!qs.length) return;
+  if (!('IntersectionObserver' in window)) { qs.forEach(drawInk); return; }
+  _io = new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting) { _io.unobserve(en.target); drawInk(en.target); } }), { rootMargin: '400px 0px' });
+  qs.forEach(q => _io.observe(q));
 }
 const me = {};
-ACT.mesub = el => { M.sub = el.dataset.k; renderMe(); };
-ACT.mecolor = el => { M.color = +el.dataset.i; renderMe(); };
+ACT.mesub = el => { M.sub = el.dataset.k; M.n = 50; renderMe(); };
+ACT.mecolor = el => { M.color = +el.dataset.i; M.n = 50; renderMe(); };
+ACT.mehlmore = () => { M.n += 50; renderMe(); };
 ACT.legend = () => { M.legend = !M.legend; renderMe(); };
 document.addEventListener('change', e => { const i = e.target.dataset && e.target.dataset.leg; if (i != null && i !== '') { D.settings.legend[i] = e.target.value.trim(); save(); } });
 ACT.mynote = el => openNoteLayer({ id: el.dataset.id });
@@ -1003,6 +1086,7 @@ ACT.topt = (el, e, d) => {
 const CM = id => C.list.find(c => c.id === id);
 const _nc = new WeakMap();
 function entNorm(e) { const k = e.title + '\u0001' + e.body, h = _nc.get(e); if (h && h.k === k) return h.n; const n = norm(e.title + ' ' + e.body); _nc.set(e, { k, n }); return n; }
+const entMatch = (e, f) => !f || entNorm(e).includes(f) || e.refs.some(r => norm(refLabel(r)).includes(f));
 function commentsFor(bk, ch, vs) {
   const out = [];
   C.list.forEach(c => c.entries.forEach(e => {
@@ -1073,7 +1157,7 @@ function buildEntries(text, def) {
 function renderComm() {
   const q = (C.q || '');
   $('#v-com').innerHTML = `<div class="vh"><h1>Commentari</h1></div><div class="pad" style="padding-bottom:0"><input type="search" id="cq" value="${esc(q)}" placeholder="Cerca per versetto (Gv 3:16) o parola…" autocomplete="off"></div><div id="cres"></div>`;
-  const i = $('#cq'); i.oninput = () => { C.q = i.value; commRes(); }; commRes();
+  const i = $('#cq'); let t; i.oninput = () => { C.q = i.value; clearTimeout(t); t = setTimeout(commRes, 180); }; commRes();
 }
 function commRes() {
   const box = $('#cres'), q = (C.q || '').trim(); let h = '';
@@ -1081,7 +1165,7 @@ function commRes() {
     const r = parseRef(q); let res = [];
     if (r) { for (const c of C.list) for (const e of c.entries) { const hit = e.refs.filter(x => x.bk === r.bk && x.c1 <= r.c2 && x.c2 >= r.c1 && (r.c1 !== r.c2 || P(x.c2, x.v2) >= P(r.c1, r.v1) && P(x.c1, x.v1) <= P(r.c2, r.v2))); if (hit.length) res.push({ c, e, span: Math.min(...hit.map(refSpan)) }); } res.sort((a, b) => a.span - b.span); }
     else { const n = norm(q); for (const c of C.list) for (const e of c.entries) if (entNorm(e).includes(n)) res.push({ c, e }); res = res.slice(0, 60); }
-    h = `<div class="mut" style="padding:10px 16px 0">${res.length} risultat${res.length === 1 ? 'o' : 'i'}${r ? ' per ' + esc(refLabel(r)) : ''}</div>` + res.map(x => entryCard(x.c, x.e)).join('');
+    h = `<div class="mut" style="padding:10px 16px 0">${res.length} risultat${res.length === 1 ? 'o' : 'i'}${r ? ' per ' + esc(refLabel(r)) : ''}</div>` + res.slice(0, 100).map(x => entryCard(x.c, x.e)).join('') + (res.length > 100 ? `<div class="mut" style="padding:8px 16px">Mostro le prime 100: restringi la ricerca.</div>` : '');
   } else {
     h = C.list.length ? C.list.map(c => `<div class="card tap" data-act="comopen" data-id="${c.id}"><h3>${esc(c.title)}</h3><div class="mut">${c.author ? esc(c.author) + ' · ' : ''}${c.entries.length} sezion${c.entries.length === 1 ? 'e' : 'i'}${c.entries.some(e => !e.refs.length) ? ' · ' + c.entries.filter(e => !e.refs.length).length + ' da associare' : ''}</div></div>`).join('') : `<div class="empty"><h2>Nessun commentario</h2>Aggiungi un commentario (testo incollato o file): le sezioni che iniziano con un riferimento, per esempio «Giovanni 3:16-21», si collegano da sole ai versetti. Poi, nel testo, tocca un versetto e «Commentario».</div>`;
   }
@@ -1093,15 +1177,16 @@ function openCommentary(cid) {
   openLayer('page', d => {
     const c = CM(cid); if (!c) return '<div class="empty">Non trovato</div>';
     const f = norm(d.ctx.f || '');
-    const es = c.entries.filter(e => !f || norm(e.title + ' ' + e.body + ' ' + e.refs.map(refLabel).join(' ')).includes(f));
+    const all = c.entries.filter(e => entMatch(e, f)), n = d.ctx.n || 60, es = all.slice(0, n);
     return `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>${esc(c.title)}</h2></div>
     <div class="chips"><button class="chip" data-act="entnew" data-cid="${cid}">${ic('plus')} Sezione</button><button class="chip" data-act="cominfo">${ic('pen')} Titolo / autore</button><button class="chip" data-act="comdel">${ic('trash')} Elimina</button></div>
-    <div class="pad" style="padding-top:0"><input type="search" id="cf" value="${esc(d.ctx.f || '')}" placeholder="Filtra le sezioni…"></div>${es.map(e => entryCard(c, e)).join('') || '<div class="empty">Nessuna sezione</div>'}`;
-  }, { ctx: { cid, f: '' } });
+    <div class="pad" style="padding-top:0"><input type="search" id="cf" value="${esc(d.ctx.f || '')}" placeholder="Filtra le sezioni…"></div>${es.map(e => entryCard(c, e)).join('') || '<div class="empty">Nessuna sezione</div>'}${all.length > n ? `<div class="pad"><button class="btn sec block" data-act="commore">Mostra altre sezioni (${all.length - n})</button></div>` : ''}`;
+  }, { ctx: { cid, f: '', n: 60 } });
   const d = layers[layers.length - 1];
-  d.mount = d => { const i = $('#cf', d); if (!i) return; i.oninput = () => { d.ctx.f = i.value; const pos = i.selectionStart; refreshLayer(d); const n = $('#cf', d); n.focus(); n.setSelectionRange(pos, pos); }; };
+  d.mount = d => { const i = $('#cf', d); if (!i) return; i.oninput = () => { clearTimeout(d._ft); d._ft = setTimeout(() => { const cur = $('#cf', d); if (!cur) return; d.ctx.f = cur.value; d.ctx.n = 60; const pos = cur.selectionStart; refreshLayer(d); const n = $('#cf', d); n.focus(); n.setSelectionRange(pos, pos); }, 220); }; };
   d.mount(d);
 }
+ACT.commore = (el, e, d) => { d.ctx.n = (d.ctx.n || 60) + 60; refreshLayer(d); };
 ACT.cominfo = (el, e, d) => { const c = CM(d.ctx.cid); openLayer('sheet', () => `<h2 class="t">Commentario</h2><label class="l">Titolo</label><input type="text" id="cit" value="${esc(c.title)}"><label class="l">Autore</label><input type="text" id="cia" value="${esc(c.author || '')}"><div class="row" style="margin-top:14px"><button class="btn" data-act="cinsave">${ic('check')} Salva</button><button class="btn sec" data-act="close">Annulla</button></div>`, { ctx: { cid: d.ctx.cid } }); };
 ACT.cinsave = (el, e, d) => { const c = CM(d.ctx.cid); c.title = $('#cit', d).value.trim() || c.title; c.author = $('#cia', d).value.trim(); saveC(); closeTop(); refreshTop(); renderComm(); };
 ACT.comdel = (el, e, d) => { const c = CM(d.ctx.cid); if (!confirmed(el, 'Sicuro?')) return; C.list = C.list.filter(x => x !== c); saveC(); closeTop(); renderComm(); };
@@ -1123,7 +1208,7 @@ ACT.comadd = () => {
     if (d.big) { if (!$('#cmt', d).value && r.title) $('#cmt', d).value = r.title; if (!$('#cma', d).value && r.author) $('#cma', d).value = r.author; }
     $('#cmprev', d).innerHTML = n ? `<b>${n}</b> sezion${n === 1 ? 'e riconosciuta' : 'i riconosciute'} e collegat${n === 1 ? 'a' : 'e'} ai versetti${un ? `, ${un} senza riferimento` : ''}.<br><span class="mut">${esc(r.entries.filter(e => e.refs.length).slice(0, 4).map(e => refLabel(e.refs[0])).join(' · '))}${n > 4 ? ' …' : ''}</span>` : 'Nessun riferimento riconosciuto: creo un’unica sezione che potrai associare ai versetti a mano.';
   };
-  d.upd = upd; $('#cmx', d).oninput = () => { d.big = null; d.bigR = null; upd(); }; $('#cmb', d).onchange = () => { if (!d.big) upd(); };
+  d.upd = upd; $('#cmx', d).oninput = () => { d.big = null; d.bigR = null; clearTimeout(d._ut); d._ut = setTimeout(upd, 300); }; $('#cmb', d).onchange = () => { if (!d.big) upd(); };
 };
 ACT.cmfile = async (el, e, d) => {
   const f = await pickFile('.txt,.md,.html,.htm,.json,text/plain,text/html,application/json'); if (!f) return;
@@ -1205,11 +1290,11 @@ ACT.cpick = (el, e, d) => {
     const c = l.ctx;
     if (!c.cid) return `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>Scegli il commentario</h2></div>${C.list.map(x => `<div class="card tap" data-act="cpickc" data-id="${x.id}"><h3>${esc(x.title)}</h3><div class="mut">${x.entries.length} sezioni</div></div>`).join('') || '<div class="empty">Nessun commentario: aggiungine uno dalla scheda Commentari.</div>'}`;
     const cm = CM(c.cid), f = norm(c.f || '');
-    const es = cm.entries.filter(e => !f || norm(e.title + ' ' + e.body + ' ' + e.refs.map(refLabel).join(' ')).includes(f));
+    const es = cm.entries.filter(e => entMatch(e, f));
     return `<div class="pg-head"><button class="ib" data-act="cpickback">${ic('back')}</button><h2>${esc(cm.title)}</h2></div><div class="pad"><input type="search" id="cpf" value="${esc(c.f || '')}" placeholder="Filtra le sezioni…"><div class="mut" style="margin-top:6px">Tocca la sezione da associare a ${esc(c.refs.map(refLabel).join(' · '))}</div></div>${es.slice(0, 80).map(e => `<div class="card tap" data-act="cpicke" data-eid="${e.id}"><div class="row w"><span class="ref">${e.refs.length ? esc(e.refs.map(refLabel).join(' · ')) : '<span class="badge">da associare</span>'}</span></div>${e.title ? `<div style="font-weight:650">${esc(e.title)}</div>` : ''}<div class="clamp mut">${esc(snippet(e.body))}</div></div>`).join('')}`;
   }, { ctx: { refs: d.ctx.refs, cid: null, f: '' } });
   const l = layers[layers.length - 1];
-  l.mount = l => { const i = $('#cpf', l); if (i) i.oninput = () => { l.ctx.f = i.value; const p = i.selectionStart; refreshLayer(l); const n = $('#cpf', l); n.focus(); n.setSelectionRange(p, p); }; };
+  l.mount = l => { const i = $('#cpf', l); if (i) i.oninput = () => { clearTimeout(l._ft); l._ft = setTimeout(() => { const cur = $('#cpf', l); if (!cur) return; l.ctx.f = cur.value; const p = cur.selectionStart; refreshLayer(l); const n = $('#cpf', l); n.focus(); n.setSelectionRange(p, p); }, 220); };  };
   l.mount(l);
 };
 ACT.cpickc = (el, e, d) => { d.ctx.cid = el.dataset.id; d.ctx.f = ''; refreshLayer(d); };
@@ -1243,7 +1328,13 @@ function migrateLegacy() {
   save();
   if (ns + nn) setTimeout(() => toast(`Importati dal vecchio prototipo: ${ns} predicazioni, ${nn} appunti`), 800);
 }
-if ('serviceWorker' in navigator && location.protocol !== 'file:') addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {}));
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {}));
+  /* il service worker apre subito la copia salvata e scarica in sottofondo la versione nuova: qui si avvisa */
+  navigator.serviceWorker.addEventListener('message', e => {
+    if (e.data && e.data.type === 'update') toastAction('Nuova versione pronta · tocca per aggiornare', async () => { try { await KV.set('data', D); } catch (er) {} location.reload(); });
+  });
+}
 
 /* ============ avvio ============ */
 function renderAll() { applyTheme(); renderReader(); if (S.tab === 'ser') renderSermons(); if (S.tab === 'com') renderComm(); if (S.tab === 'me') renderMe(); }
@@ -1255,7 +1346,6 @@ document.addEventListener('click', e => {
   await KV.init();
   const d = await KV.get('data');
   if (d) { D = Object.assign(D, d); D.settings = Object.assign({ size: 19, theme: 'carta', bible: null, last: { bk: 42, ch: 3 }, legend: {} }, d.settings || {}); }
-  const c = await KV.get('comms'); if (c) C = c;
   migrateLegacy();
   history.replaceState({ l: 0 }, '');
   if (D.settings.bible) await loadBible(D.settings.bible);
@@ -1263,6 +1353,15 @@ document.addEventListener('click', e => {
   S.bk = D.settings.last.bk; S.ch = D.settings.last.ch;
   if (BIBLE && !hasBook(S.bk)) { S.bk = BOOKS.findIndex((_, i) => hasBook(i)); S.ch = 1; }
   renderAll(); window.__ready = true;
+  /* i commentari (anche di diversi MB) si leggono dopo la prima schermata, non prima */
+  requestAnimationFrame(() => setTimeout(async () => {
+    try {
+      const c = await KV.get('comms'); if (c && !C.list.length) C = c;
+      _commsRes();
+      if (S.tab === 'com') renderComm();
+      if (S.sel) { _shKey = ''; showSheet(); }   /* aggiorna il numero di commentari sul pulsante */
+    } catch (e) {}
+  }, 0));
 })();
 
 </script></body></html>

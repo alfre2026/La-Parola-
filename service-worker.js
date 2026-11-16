@@ -1,15 +1,16 @@
 /* LA PAROLA — service worker
-   Strategia "prima la rete, poi la copia salvata":
-   - con la connessione l'app carica sempre l'ultima versione pubblicata
-     (basta ricaricare index.html sul sito per aggiornare l'app installata);
-   - senza connessione, o con rete lentissima, parte dalla copia salvata. */
+   Strategia "subito la copia salvata, aggiornamento in sottofondo":
+   - l'app si apre all'istante dalla copia salvata, anche con rete lenta o assente;
+   - intanto scarica la versione pubblicata e aggiorna la copia salvata;
+   - se la pagina è cambiata, avvisa l'app, che propone di aggiornare con un tocco
+     (altrimenti la versione nuova parte alla prossima apertura). */
 const PREFIX = "la-parola-";
 const CACHE = PREFIX + "v2";
 const CORE = ["./", "./index.html"];
 const EXTRA = ["./manifest.json", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png"];
-const WAIT_MS = 3000;
 
 const fresh = url => new Request(url, { cache: "reload" });
+const tag = res => res && (res.headers.get("etag") || res.headers.get("last-modified"));
 
 self.addEventListener("install", event => {
   event.waitUntil(
@@ -30,30 +31,34 @@ self.addEventListener("activate", event => {
   );
 });
 
+async function tellClients() {
+  const list = await self.clients.matchAll({ type: "window" });
+  list.forEach(c => c.postMessage({ type: "update" }));
+}
+
 self.addEventListener("fetch", event => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
   const key = url.origin + url.pathname;
-
-  const network = fetch(req, { cache: "no-cache" });
-
-  // Aggiorna la copia salvata ogni volta che la rete risponde bene.
-  event.waitUntil(
-    network.then(res => {
-      if (!res.ok) return;
-      const copy = res.clone();
-      return caches.open(CACHE).then(cache => cache.put(key, copy));
-    }).catch(() => {})
-  );
+  const isPage = req.mode === "navigate" || url.pathname.endsWith("/index.html");
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     const saved = (await cache.match(key)) ||
       (req.mode === "navigate" ? await cache.match("./index.html") : undefined);
-    if (!saved) return network;
-    const timeout = new Promise(resolve => setTimeout(() => resolve(saved), WAIT_MS));
-    return Promise.race([network.then(res => (res.ok ? res : saved), () => saved), timeout]);
+
+    // Versione pubblicata, scaricata in sottofondo; aggiorna la copia salvata.
+    const update = fetch(req, { cache: "no-cache" }).then(async res => {
+      if (!res.ok) return res;
+      const before = tag(saved), after = tag(res);
+      await cache.put(key, res.clone());
+      if (isPage && saved && before && after && before !== after) await tellClients();
+      return res;
+    });
+    event.waitUntil(update.catch(() => {}));
+
+    return saved || update;   // senza copia salvata (primo avvio) si aspetta la rete
   })());
 });
