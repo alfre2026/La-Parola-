@@ -1,492 +1,1094 @@
-<!doctype html>
-<html lang="it">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#243b32">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="La Parola">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<title>La Parola — Bibbia, Studio e Predicazione</title>
-<style>
-*{box-sizing:border-box}
-[hidden]{display:none!important}
-body{margin:0;background:#f5f3ed;color:#26352e;font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
-.top{height:76px;background:#243b32;color:#f7f0df;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 5vw}
-.brand{display:flex;align-items:center;gap:12px;letter-spacing:.12em;min-width:0}
-.brand strong{font-size:15px;white-space:nowrap}
-.brand small{display:block;font-size:9px;letter-spacing:.18em;color:#d5c8a8;white-space:nowrap}
-.cross{font-size:29px;color:#d9bd7b}
-.local{font-size:11px;color:#d9e5d8}
-.head-actions{display:flex;align-items:center;gap:14px;flex:none}
-.install-btn{background:#d9bd7b;color:#243b32;border:0;font-weight:700;padding:9px 13px;white-space:nowrap}
-.shell{display:grid;grid-template-columns:245px 1fr;max-width:1280px;margin:auto;min-height:calc(100vh - 120px)}
-.sidebar{padding:35px 18px;border-right:1px solid #e2ded2;background:#faf9f5}
-.side-title,.eyebrow{font-size:10px;letter-spacing:.18em;color:#8b8068;font-weight:700;margin:0 0 16px}
-.nav{width:100%;text-align:left;border:0;background:transparent;padding:13px 14px;border-radius:10px;color:#59645c;cursor:pointer;margin:3px 0;font-size:14px}
-.nav span{margin-left:9px}
-.nav.active,.nav:hover{background:#e9eee8;color:#243b32;font-weight:650}
-.side-note{margin:45px 10px;color:#9a968a;font-size:12px}
-main{padding:42px clamp(22px,5vw,70px);max-width:1050px;width:100%;min-width:0}
-.page{display:none}
-.page.show{display:block}
-h1{font:500 clamp(30px,4vw,42px)/1.2 Georgia,serif;margin:0 0 8px;color:#263a30}
-h3{font:600 17px Georgia,serif;margin:0 0 14px}
-.muted{color:#7b817a;margin:0 0 25px}
-.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:20px 0}
-button,select,input,textarea{font:inherit}
-button,select{border:1px solid #d9d8ce;background:#fff;border-radius:8px;padding:10px 13px;color:#35453b;cursor:pointer}
-button.primary{background:#29483a;color:white;border-color:#29483a}
-button.danger{background:#a23b2a;color:white;border-color:#a23b2a}
-button:hover{filter:brightness(.97)}
-button:disabled{opacity:.45;cursor:default}
-.reading,.panel{background:#fff;border:1px solid #e8e4d9;border-radius:14px;padding:25px;margin:18px 0;box-shadow:0 4px 18px #283b3008}
-.chapter-label{font-size:11px;letter-spacing:.13em;color:#8a8069;font-weight:700;margin-bottom:20px}
-.chapter-label b{font-weight:inherit}
-.chapter-label span{color:#c5b88e}
-.chapter-label .sample{float:right;font-size:9px;color:#b18c42}
-.verse{font:19px/1.85 Georgia,serif;color:#39443c;margin:13px 0}
-.verse sup{font:11px system-ui;color:#9a8b6a;margin-right:9px;-webkit-user-select:none;user-select:none}
-.no-text{color:#7b817a;margin:6px 0}
-.hint,.tiny{font-size:12px;color:#8b8b80;margin-top:18px}
-.picked{display:flex;align-items:center;gap:6px;background:#fbf6e6;border:1px solid #ead9a8;border-radius:10px;padding:8px 6px 8px 14px;margin:-6px 0 0}
-.picked-body{flex:1;min-width:0}
-.picked small{display:block;font-size:10px;letter-spacing:.13em;color:#8a8069;font-weight:700;text-transform:uppercase}
-.picked-text{display:block;font:15px/1.4 Georgia,serif;color:#39443c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.picked button{border:0;background:transparent;padding:8px 10px;font-size:15px;color:#8a8069}
-.picked.empty{background:transparent;border-style:dashed;border-color:#d9d8ce}
-.picked.empty .picked-text{color:#8b8b80;font-style:italic}
-.picked.empty button{visibility:hidden}
-.panel label{display:block;font-size:12px;color:#6c756d;font-weight:650;margin:12px 0}
-.panel input,.panel textarea{display:block;width:100%;margin-top:6px;border:1px solid #deded5;border-radius:8px;padding:11px;background:#fdfdfa;color:#293a30;font-size:16px;font-weight:400}
-.panel textarea{min-height:90px;resize:vertical}
-.panel textarea+button{margin-top:12px}
-.stack{display:grid;gap:12px;margin-top:15px}
-.item{background:white;border:1px solid #e7e3d9;border-radius:12px;padding:16px;min-width:0}
-.item strong{font-family:Georgia,serif}
-.item p{margin:6px 0;color:#737b73;white-space:pre-wrap;overflow-wrap:anywhere}
-.item p.quote{font-family:Georgia,serif;font-style:italic;color:#39443c;border-left:3px solid #d9bd7b;padding-left:10px}
-.item button{margin:6px 5px 0 0;font-size:12px;padding:7px 10px}
-.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
-.edit-state{display:inline-block;border-radius:20px;background:#e9eee8;color:#243b32;padding:5px 12px;font-size:12px;font-weight:650;margin-bottom:6px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}
-.stats div{background:white;border:1px solid #e8e4d9;border-radius:12px;padding:18px;min-width:0}
-.stats strong{display:block;font:30px Georgia,serif}
-.stats span{font-size:12px;color:#81877f}
-.pill{display:inline-block;border-radius:20px;background:#f3ecd9;color:#826a36;padding:5px 10px;font-size:11px}
-footer{text-align:center;color:#aaa596;font-size:11px;padding:20px}
-.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);background:#243b32;color:#f7f0df;padding:11px 16px;border-radius:10px;font-size:13px;line-height:1.4;width:max-content;max-width:min(92vw,460px);text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 6px 24px #0000003a;z-index:10}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-@media(max-width:760px){
-  .shell{display:block}
-  .sidebar{display:flex;overflow:auto;padding:9px;border-right:0;border-bottom:1px solid #e2ded2}
-  .side-title,.side-note{display:none}
-  .nav{white-space:nowrap;width:auto;padding:10px}
-  .nav span{margin-left:5px}
-  main{padding:28px 17px}
-  .editor-grid{grid-template-columns:1fr}
-  .local{display:none}
-  .top{padding:0 18px}
-  .head-actions{gap:5px}
-  .install-btn{font-size:12px;padding:8px}
-  .reading,.panel{padding:20px 18px}
+<!DOCTYPE html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#243b32"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="La Parola"><link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><title>La Parola — Bibbia, Studio e Predicazione</title><style>
+:root{
+  --bg:#f6f0e4;--card:#fffdf8;--ink:#2a2620;--mute:#7a7266;--line:#e3d9c6;--acc:#8a4b2a;--accsoft:#f0ddd0;
+  --bar:#fbf7ee;--flash:#ffe9a0;--shadow:0 -6px 24px rgba(60,40,10,.16);--fs:19px;
 }
-@media(max-width:420px){
-  .brand{gap:9px;letter-spacing:.09em}
-  .brand small{font-size:8px;letter-spacing:.1em}
-}
-</style>
-</head>
-<body>
-<header class="top">
-  <div class="brand"><div class="cross">✝</div><div><strong>LA PAROLA</strong><small>BIBBIA · STUDIO · PREDICAZIONE</small></div></div>
-  <div class="head-actions"><button id="installApp" class="install-btn" hidden>＋ Installa app</button><span class="local">● Archivio su questo dispositivo</span></div>
-</header>
-<div class="shell">
-<aside class="sidebar">
-  <div class="side-title">La tua biblioteca</div>
-  <button class="nav active" data-tab="bible">▤ <span>Bibbia</span></button>
-  <button class="nav" data-tab="notes">✎ <span>Appunti e sottolineature</span></button>
-  <button class="nav" data-tab="commentary">▥ <span>Commentari</span></button>
-  <button class="nav" data-tab="sermons">☷ <span>Predicazioni</span></button>
-  <button class="nav" data-tab="library">▣ <span>Archivio</span></button>
-  <div class="side-note">I tuoi studi, raccolti in un unico luogo.</div>
-</aside>
-<main>
-<section id="bible" class="page show">
-  <div class="eyebrow">LETTURA E STUDIO</div><h1>La Bibbia</h1>
-  <p class="muted">Leggi il testo, seleziona una frase e aggiungi una sottolineatura o un appunto.</p>
-  <div class="toolbar">
-    <select id="book" aria-label="Libro"><option>Genesi</option><option>Salmi</option><option>Giovanni</option><option>Romani</option></select>
-    <select id="chapter" aria-label="Capitolo"><option>1</option><option>2</option><option>3</option></select>
-    <button class="primary" id="addMark">＋ Sottolinea selezione</button>
-  </div>
-  <div id="picked" class="picked empty">
-    <div class="picked-body"><small id="pickedRef">Selezione</small><span id="pickedText" class="picked-text">Nessun testo selezionato</span></div>
-    <button id="clearPicked" aria-label="Annulla la selezione">✕</button>
-  </div>
-  <div class="reading">
-    <div class="chapter-label"><b id="lblBook">GENESI</b> <span>·</span> CAPITOLO <b id="lblChapter">1</b> <span class="sample" id="sampleTag">TESTO DIMOSTRATIVO</span></div>
-    <div id="verses">
-      <p class="verse" data-v="1"><sup>1</sup> <span class="vt">Nel principio Dio creò i cieli e la terra.</span></p>
-      <p class="verse" data-v="2"><sup>2</sup> <span class="vt">La terra era informe e vuota, e le tenebre coprivano la faccia dell'abisso; e lo Spirito di Dio aleggiava sulla superficie delle acque.</span></p>
-      <p class="verse" data-v="3"><sup>3</sup> <span class="vt">E Dio disse: «Sia la luce!» E la luce fu.</span></p>
-      <p class="verse" data-v="4"><sup>4</sup> <span class="vt">Dio vide che la luce era buona; e Dio separò la luce dalle tenebre.</span></p>
+body.t-chiaro{--bg:#ffffff;--card:#ffffff;--ink:#1d1d1f;--mute:#6e6e73;--line:#e5e5ea;--acc:#1d5fa8;--accsoft:#e4eefa;--bar:#fafafa;--flash:#fff0a8}
+body.t-scuro{--bg:#17171a;--card:#212126;--ink:#e8e6e1;--mute:#9a978f;--line:#34343a;--acc:#e0a36c;--accsoft:#3a2f25;--bar:#1d1d21;--flash:#5a4b1c;--shadow:0 -6px 24px rgba(0,0,0,.5)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+#app{max-width:760px;margin:0 auto;min-height:100%;position:relative}
+.view{display:none;padding-bottom:90px}.view.on{display:block}
+.vh{position:sticky;top:0;z-index:20;background:var(--bar);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:6px;padding:8px 10px;min-height:54px}
+.vh h1{font-size:18px;margin:0;flex:1;font-weight:650}
+.ib{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:40px;height:40px;border-radius:12px;padding:0 8px}
+.ib:active{background:var(--accsoft)}
+.refbtn{font-size:19px;font-weight:700;display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:12px;flex:1;justify-content:flex-start}
+.refbtn small{font-weight:500;color:var(--mute);font-size:13px}
+.sp{flex:1}
+/* testo biblico */
+#text{font-family:Georgia,"Iowan Old Style","Palatino Linotype",serif;font-size:var(--fs);line-height:1.8;padding:18px 18px 40px;-webkit-user-select:text;user-select:text;text-align:left;hyphens:auto}
+#text .cap{font:700 .8em system-ui;color:var(--mute);letter-spacing:.04em;text-transform:uppercase;margin:0 0 10px}
+sup.vn{font:700 .56em system-ui,sans-serif;color:var(--acc);margin:0 4px 0 5px;vertical-align:super;-webkit-user-select:none;user-select:none;padding:1px 3px;border-radius:4px}
+.w.h{background:var(--hc);color:#26231e;border-radius:2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.vs{cursor:pointer;border-radius:3px}
+.vs.sel .w{text-decoration:underline;text-decoration-color:var(--acc);text-decoration-thickness:2px;text-underline-offset:5px}
+.vs.sel sup.vn{background:var(--acc);color:#fff}
+.vs.bm sup.vn::after{content:"";display:inline-block;width:6px;height:9px;background:var(--acc);margin-left:3px;clip-path:polygon(0 0,100% 0,100% 100%,50% 70%,0 100%);vertical-align:-1px}
+.vs.hasnote sup.vn{box-shadow:inset 0 -2px 0 var(--acc)}
+.vs.flash{animation:fl 2.2s ease-out}
+@keyframes fl{0%,40%{background:var(--flash)}100%{background:transparent}}
+.w.pk{outline:2px solid var(--acc);border-radius:3px}
+.ni{display:inline-flex;vertical-align:-3px;margin:0 2px 0 5px;width:24px;height:24px;border-radius:7px;background:var(--accsoft);color:var(--acc);align-items:center;justify-content:center;position:relative}
+.ni svg{width:15px;height:15px}
+.ni b{position:absolute;top:-5px;right:-5px;background:var(--acc);color:#fff;border-radius:8px;font:700 10px system-ui;padding:0 4px;line-height:14px}
+#chnav{display:flex;gap:10px;padding:0 16px 30px}
+#chnav button{flex:1;padding:14px;border:1px solid var(--line);border-radius:14px;background:var(--card);font-weight:600}
+.empty{padding:34px 22px;text-align:center;color:var(--mute);line-height:1.6}
+.empty h2{color:var(--ink);margin:6px 0 8px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:12px;background:var(--acc);color:#fff;font-weight:600}
+body.t-scuro .btn{color:#1b1b1b}
+.btn.sec{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.btn.sm{padding:7px 11px;font-size:14px;border-radius:10px}
+.btn.danger{background:#b3382c;color:#fff}
+.btn.block{display:flex;width:100%}
+/* sheet versetto */
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:50;display:none}
+#sheet.on{display:block}
+#sheet .in{max-width:760px;margin:0 auto;background:var(--bar);border-top:1px solid var(--line);border-radius:20px 20px 0 0;box-shadow:var(--shadow);padding:10px 14px calc(12px + env(safe-area-inset-bottom))}
+.sh-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sh-top b{flex:1;font-size:16px}
+.sh-top small{color:var(--mute);font-weight:500}
+.cols{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-bottom:8px}
+.cdot{aspect-ratio:1;border-radius:50%;border:2px solid rgba(0,0,0,.12);position:relative;max-width:40px;width:100%;justify-self:center}
+.cdot.x{background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--mute)}
+.cdot:active{transform:scale(.9)}
+.acts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.acts button{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:12px;padding:6px 2px;border-radius:12px;color:var(--ink)}
+.acts button:active,.acts button.on{background:var(--accsoft);color:var(--acc)}
+.acts button .bd{position:absolute;margin:-4px 0 0 22px;background:var(--acc);color:#fff;border-radius:9px;font:700 10px system-ui;padding:0 5px;line-height:15px}
+.hint{font-size:13px;color:var(--acc);background:var(--accsoft);border-radius:10px;padding:7px 10px;margin-bottom:8px}
+/* tab bar */
+#tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--bar);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+#tabs .in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+#tabs button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;font-size:11.5px;color:var(--mute)}
+#tabs button.on{color:var(--acc);font-weight:700}
+/* layers */
+#layers .layer{position:fixed;inset:0;z-index:100}
+.layer.sheet .bk{position:absolute;inset:0;background:rgba(0,0,0,.42)}
+.layer.sheet .panel{position:absolute;left:0;right:0;bottom:0;max-width:760px;margin:0 auto;background:var(--bar);border-radius:20px 20px 0 0;max-height:88vh;overflow:auto;padding:16px 16px calc(18px + env(safe-area-inset-bottom))}
+.layer.page .panel{position:absolute;inset:0;background:var(--bg);overflow:auto;max-width:760px;margin:0 auto;padding-bottom:70px}
+.layer.page.dark .panel{background:#0e0e10;color:#ece9e2;--ink:#ece9e2;--card:#1a1a1e;--line:#2d2d33;--mute:#9b988f;--bar:#151518;--acc:#e8b27c;--accsoft:#33281d}
+h2.t{margin:2px 0 12px;font-size:18px}
+input[type=text],input[type=search],textarea,select{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px;outline:none}
+input:focus,textarea:focus{border-color:var(--acc)}
+textarea{min-height:130px;resize:vertical;line-height:1.5}
+label.l{display:block;font-size:13px;color:var(--mute);margin:12px 0 5px;font-weight:600}
+.row{display:flex;gap:8px;align-items:center}
+.row.w{flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 14px}
+.card.tap:active{background:var(--accsoft)}
+.card h3{margin:0 0 3px;font-size:16px}
+.mut{color:var(--mute);font-size:13px}
+.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.chips{display:flex;gap:7px;flex-wrap:wrap;padding:10px 14px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:20px;padding:6px 12px;font-size:13.5px;display:inline-flex;align-items:center;gap:6px}
+.chip.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+body.t-scuro .chip.on{color:#1b1b1b}
+.chip i{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(0,0,0,.2)}
+.seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:10px 14px;background:var(--card)}
+.seg button{flex:1;padding:10px 4px;font-size:14px;color:var(--mute)}
+.seg button.on{background:var(--acc);color:#fff;font-weight:650}
+body.t-scuro .seg button.on{color:#1b1b1b}
+.fab{position:fixed;right:max(16px,calc(50% - 364px));bottom:calc(76px + env(safe-area-inset-bottom));z-index:25;box-shadow:0 6px 18px rgba(0,0,0,.28);border-radius:30px;padding:14px 20px}
+.hl-q{font-family:Georgia,serif;line-height:1.7;margin-top:6px}
+.hl-q mark{background:var(--hc);color:#26231e;border-radius:3px;padding:1px 0}
+.hl-q sup{font:700 .6em system-ui;color:var(--acc);margin-right:3px}
+.ref{font-weight:700;color:var(--acc)}
+.body{font-family:Georgia,serif;font-size:calc(var(--fs) - 1px);line-height:1.75;white-space:normal}
+.body p{margin:0 0 .9em}
+.body h4{margin:1em 0 .4em;font-family:system-ui}
+.vquote{border-left:3px solid var(--acc);padding:2px 0 2px 12px;margin:8px 0;font-family:Georgia,serif;line-height:1.65}
+.vquote sup{font:700 .6em system-ui;color:var(--acc);margin-right:3px}
+.pt{position:relative}
+.pt .n{display:inline-flex;width:28px;height:28px;border-radius:50%;background:var(--acc);color:#fff;font-weight:700;align-items:center;justify-content:center;font-size:14px;flex:none}
+body.t-scuro .pt .n,.dark .pt .n{color:#1b1b1b}
+.pt .tx{white-space:pre-wrap;line-height:1.55;font-size:17px;margin:8px 0}
+.dark .pt .tx{font-size:calc(var(--fs) + 1px);line-height:1.6}
+.vchip{display:inline-flex;align-items:center;gap:4px;background:var(--accsoft);color:var(--acc);border-radius:10px;padding:5px 6px 5px 10px;font-weight:650;font-size:14px;margin:3px 4px 3px 0}
+.vchip button{display:inline-flex;padding:2px;border-radius:6px}
+.toast{position:fixed;left:50%;top:66px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:300;opacity:0;pointer-events:none;transition:opacity .2s;max-width:88vw;text-align:center}
+.toast.on{opacity:.96}
+.bkgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.bkgrid button{text-align:left;padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:var(--card);font-size:15px}
+.chgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.chgrid button{padding:12px 0;border-radius:11px;border:1px solid var(--line);background:var(--card);font-weight:600}
+.sech{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);margin:16px 2px 8px;font-weight:700}
+.lg{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:center;margin:6px 0}
+.lg i{width:22px;height:22px;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.2)}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.prog{height:8px;background:var(--line);border-radius:6px;overflow:hidden;margin:12px 0}.prog b{display:block;height:100%;background:var(--acc);width:0}
+.sr{padding:10px 2px;border-bottom:1px solid var(--line)}
+.sr:active{background:var(--accsoft)}
+.pg-head{display:flex;align-items:center;gap:4px;position:sticky;top:0;background:var(--bar);z-index:5;padding:8px 8px;border-bottom:1px solid var(--line);min-height:54px}
+.pg-head h2{flex:1;margin:0;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dark .pg-head{background:#151518}
+.pad{padding:12px 14px}
+.w.pr{background:var(--accsoft);box-shadow:0 2px 0 var(--acc)}
+a.ref{text-decoration:underline;text-decoration-style:dotted;cursor:pointer}
+mark{background:#ffe27a;color:#222;border-radius:3px}
+.badge{display:inline-block;font-size:11.5px;background:var(--accsoft);color:var(--acc);border-radius:8px;padding:2px 7px;font-weight:650}
+
+.danger{background:#b3382c!important;color:#fff!important;border-color:#b3382c!important}
+.ib.danger{padding:0 12px;font-size:13px;font-weight:650}
+</style></head><body class="t-carta">
+<div id="app">
+  <section id="v-read" class="view on">
+    <div class="vh">
+      <button class="refbtn" data-act="picker" id="refbtn"></button>
+      <button class="ib" data-act="search" aria-label="Cerca"><svg class="i"><use href="#i-search"/></svg></button>
+      <button class="ib" data-act="aa" aria-label="Aspetto"><svg class="i"><use href="#i-type"/></svg></button>
     </div>
-    <p id="noText" class="no-text" hidden></p>
-    <div class="hint" id="readingHint">Seleziona una parola o una frase nel testo, poi scegli “Sottolinea selezione”.</div>
-  </div>
-  <div class="panel">
-    <h3>Nota sul testo selezionato</h3>
-    <textarea id="verseNote" placeholder="Scrivi una riflessione, una domanda o un'applicazione..."></textarea>
-    <button class="primary" id="saveVerseNote">Salva appunto collegato al riferimento</button>
-  </div>
-</section>
-<section id="notes" class="page">
-  <div class="eyebrow">IL TUO STUDIO PERSONALE</div><h1>Appunti e sottolineature</h1>
-  <p class="muted">Le annotazioni salvate vengono raccolte qui e collegate al riferimento biblico.</p>
-  <div id="notesList" class="stack"></div>
-</section>
-<section id="commentary" class="page">
-  <div class="eyebrow">APPROFONDIMENTO</div><h1>Commentari</h1>
-  <p class="muted">Organizza commentari personali e importa documenti da consultare durante lo studio.</p>
-  <div class="panel">
-    <h3>Aggiungi un commentario</h3>
-    <label>Titolo<input id="commentTitle" placeholder="Es. Commentario al Vangelo di Giovanni"></label>
-    <label>Riferimento biblico<input id="commentRef" placeholder="Es. Giovanni 3:16 oppure intero libro"></label>
-    <label>File PDF o Word<input id="commentFile" type="file" accept=".pdf,.doc,.docx"></label>
-    <button class="primary" id="saveComment">Aggiungi alla biblioteca</button>
-    <p class="tiny">In questo prototipo del file viene registrato solo il nome: il documento non viene conservato né aperto dall'app.</p>
-  </div>
-  <div id="commentList" class="stack"></div>
-</section>
-<section id="sermons" class="page">
-  <div class="eyebrow">PREPARAZIONE DEI MESSAGGI</div><h1>Le mie predicazioni</h1>
-  <p class="muted">Crea un messaggio da una pagina vuota oppure usa una traccia guidata.</p>
-  <div class="toolbar"><button class="primary" id="newFree">＋ Predicazione libera</button><button id="newGuided">＋ Schema guidato</button></div>
-  <div class="panel" id="sermonEditor">
-    <div id="editState" class="edit-state" hidden></div>
-    <label>Titolo<input id="sermonTitle" placeholder="Titolo della predicazione"></label>
-    <label>Testo biblico di riferimento<input id="sermonRef" placeholder="Es. Romani 8:28-39"></label>
-    <div class="editor-grid">
-      <label>Introduzione<textarea id="sIntro" placeholder="Introduzione..."></textarea></label>
-      <label>Contesto biblico e storico<textarea id="sContext" placeholder="Contesto..."></textarea></label>
-      <label>Tema centrale<textarea id="sTheme" placeholder="Qual è il messaggio principale?"></textarea></label>
-      <label>Punti principali<textarea id="sPoints" placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea></label>
-      <label>Illustrazioni e applicazioni<textarea id="sApply" placeholder="Esempi e applicazioni pratiche..."></textarea></label>
-      <label>Conclusione e appello<textarea id="sEnd" placeholder="Conclusione..."></textarea></label>
-    </div>
-    <div class="toolbar"><button class="primary" id="saveSermon">Salva predicazione</button><button id="exportSermon">Esporta in .txt</button></div>
-  </div>
-  <h3>Messaggi salvati</h3><div id="sermonList" class="stack"></div>
-</section>
-<section id="library" class="page">
-  <div class="eyebrow">RACCOLTA PERSONALE</div><h1>Archivio</h1>
-  <div class="stats"><div><strong id="nNotes">0</strong><span>Appunti</span></div><div><strong id="nSermons">0</strong><span>Predicazioni</span></div><div><strong id="nComments">0</strong><span>Commentari</span></div></div>
-  <div class="panel"><h3>Sincronizzazione tra dispositivi</h3><p>Questa prima versione salva i dati localmente. Per sincronizzarli tra telefono, tablet e computer occorre collegare un progetto cloud, creare l'accesso utente e applicare le regole di sicurezza.</p><span class="pill">Da configurare: account + cloud</span></div>
-  <div class="panel"><h3>Testo biblico</h3><p>Il testo mostrato è dimostrativo e non costituisce una Bibbia completa. Prima di pubblicare l'app bisogna scegliere un'edizione e verificare i relativi diritti di utilizzo.</p></div>
-</section>
-</main>
+    <article id="text"></article>
+    <div id="chnav"></div>
+  </section>
+  <section id="v-ser" class="view"></section>
+  <section id="v-com" class="view"></section>
+  <section id="v-me" class="view"></section>
 </div>
-<footer>LA PAROLA · Prototipo installabile v2 · I dati sono salvati su questo dispositivo</footer>
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="sheet"></div>
+<nav id="tabs"><div class="in">
+  <button data-act="tab" data-t="read" class="on"><svg class="i"><use href="#i-book"/></svg>Leggi</button>
+  <button data-act="tab" data-t="ser"><svg class="i"><use href="#i-file"/></svg>Sermoni</button>
+  <button data-act="tab" data-t="com"><svg class="i"><use href="#i-msg"/></svg>Commentari</button>
+  <button data-act="tab" data-t="me"><svg class="i"><use href="#i-user"/></svg>Personale</button>
+</div></nav>
+<div id="layers"></div>
+<div class="toast" id="toast"></div>
+<input type="file" id="fileIn" hidden>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+  <symbol id="i-type" viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M4 3h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-5 4V4a1 1 0 0 1 1-1z"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="13" y2="12"/></symbol>
+  <symbol id="i-bm" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 24 24"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></symbol>
+  <symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></symbol>
+  <symbol id="i-down2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-up2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+</defs></svg>
 <script>
-(function () {
-  "use strict";
-  const $ = id => document.getElementById(id);
+'use strict';
+/* ============ utilità ============ */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const ic = (n, cls = '') => `<svg class="i ${cls}"><use href="#i-${n}"/></svg>`;
+const norm = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('on'), 2200); }
+/* conferma con doppio tocco (niente confirm/alert/prompt) */
+function confirmed(btn, q, msg) {
+  if (btn.dataset.armed === '1') { clearTimeout(btn.armTimer); btn.dataset.armed = ''; return true; }
+  btn.dataset.armed = '1'; btn.dataset.html = btn.innerHTML; btn.textContent = q || 'Sicuro?'; btn.classList.add('danger');
+  btn.armTimer = setTimeout(() => { if (btn.isConnected) { btn.dataset.armed = ''; btn.innerHTML = btn.dataset.html; btn.classList.remove('danger'); } }, 3500);
+  if (msg) toast(msg);
+  return false;
+}
+function fmtDate(ts) { return new Date(ts).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' }); }
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch (e) {}
+  const a = document.createElement('textarea'); a.value = t; a.style.position = 'fixed'; a.style.opacity = '0'; document.body.appendChild(a); a.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {} a.remove(); return ok;
+}
+async function shareText(t, title) {
+  if (navigator.share) { try { await navigator.share({ title: title || 'La Parola', text: t }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  toast((await copyText(t)) ? 'Copiato negli appunti' : 'Impossibile copiare');
+}
+function download(name, text, type = 'application/json') {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+function pickFile(accept) {
+  return new Promise(res => {
+    const i = $('#fileIn'); i.value = ''; i.accept = accept || '';
+    i.onchange = async () => { const f = i.files[0]; if (!f) return res(null); res({ name: f.name, text: await f.text() }); };
+    i.click();
+  });
+}
 
-  /* ---------- Avvisi a schermo ---------- */
-  let toastTimer;
-  function toast(msg) {
-    const el = $("toast");
-    el.textContent = msg;
-    el.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
-  }
+/* ============ libri e riferimenti ============ */
+const BOOKS = [
+  ['Genesi', 'gen gn ge'], ['Esodo', 'es eso esodo ex'], ['Levitico', 'lev lv le'], ['Numeri', 'num nm nu'], ['Deuteronomio', 'deut dt de'],
+  ['Giosuè', 'gios gs giosue'], ['Giudici', 'giud gdc giudici'], ['Rut', 'rut rt'], ['1 Samuele', '1sam 1sa 1sm 1samuele'], ['2 Samuele', '2sam 2sa 2sm 2samuele'],
+  ['1 Re', '1re 1r'], ['2 Re', '2re 2r'], ['1 Cronache', '1cron 1cr 1cronache'], ['2 Cronache', '2cron 2cr 2cronache'], ['Esdra', 'esd esdra'],
+  ['Neemia', 'nee ne neemia'], ['Ester', 'est ester'], ['Giobbe', 'giob gb giobbe'], ['Salmi', 'sal sl salmo salmi ps'], ['Proverbi', 'prov pr proverbi'],
+  ['Ecclesiaste', 'eccl ec ecclesiaste qoelet'], ['Cantico dei Cantici', 'cant ca cantico canticodeicantici'], ['Isaia', 'is isaia'], ['Geremia', 'ger gr geremia'], ['Lamentazioni', 'lam lm lamentazioni'],
+  ['Ezechiele', 'ez ezechiele'], ['Daniele', 'dan da dn daniele'], ['Osea', 'os osea'], ['Gioele', 'gl gioe gioele'], ['Amos', 'am amos'],
+  ['Abdia', 'abd ab abdia'], ['Giona', 'gion gna giona'], ['Michea', 'mic mi michea'], ['Naum', 'na nah naum'], ['Abacuc', 'abac ac abacuc hc'],
+  ['Sofonia', 'sof sf sofonia'], ['Aggeo', 'agg ag aggeo'], ['Zaccaria', 'zac zc zaccaria'], ['Malachia', 'mal ml malachia'],
+  ['Matteo', 'matt mt matteo'], ['Marco', 'mar mc mr marco'], ['Luca', 'luc lc luca'], ['Giovanni', 'giov gv gio giovanni'], ['Atti', 'at atti'],
+  ['Romani', 'rom rm ro romani'], ['1 Corinzi', '1cor 1co 1corinzi'], ['2 Corinzi', '2cor 2co 2corinzi'], ['Galati', 'gal ga galati'], ['Efesini', 'ef efes efesini'],
+  ['Filippesi', 'fil flp filippesi'], ['Colossesi', 'col colossesi'], ['1 Tessalonicesi', '1tess 1ts 1te 1tessalonicesi'], ['2 Tessalonicesi', '2tess 2ts 2te 2tessalonicesi'],
+  ['1 Timoteo', '1tim 1ti 1timoteo'], ['2 Timoteo', '2tim 2ti 2timoteo'], ['Tito', 'tit tt tito'], ['Filemone', 'filem flm filemone'], ['Ebrei', 'ebr eb ebrei'],
+  ['Giacomo', 'giac gc gm giacomo'], ['1 Pietro', '1pie 1pt 1piet 1pietro'], ['2 Pietro', '2pie 2pt 2piet 2pietro'], ['1 Giovanni', '1giov 1gv 1gio 1giovanni'],
+  ['2 Giovanni', '2giov 2gv 2gio 2giovanni'], ['3 Giovanni', '3giov 3gv 3gio 3giovanni'], ['Giuda', 'gda gd giuda'], ['Apocalisse', 'ap apoc apocalisse rivelazione']
+].map(([n, a]) => ({ n, a: a.split(' ') }));
+const ALIAS = {};
+BOOKS.forEach((b, i) => { const k = x => norm(x).replace(/[\s.°]/g, ''); ALIAS[k(b.n)] = i; b.a.forEach(a => ALIAS[k(a)] = i); });
+const bookIdx = s => { const k = norm(s).replace(/[\s.°]/g, ''); return k in ALIAS ? ALIAS[k] : -1; };
 
-  /* Conferma con un secondo tocco per le azioni che cancellano qualcosa. */
-  function confirmed(btn, question) {
-    if (btn.dataset.armed === "1") { disarm(btn); return true; }
-    btn.dataset.armed = "1";
-    btn.dataset.label = btn.textContent;
-    btn.textContent = question;
-    btn.classList.add("danger");
-    btn.armTimer = setTimeout(() => disarm(btn), 3500);
-    return false;
-  }
-  function disarm(btn) {
-    clearTimeout(btn.armTimer);
-    if (btn.dataset.armed !== "1") return;
-    btn.dataset.armed = "";
-    btn.textContent = btn.dataset.label;
-    btn.classList.remove("danger");
-  }
+/* ref = {bk,c1,v1,c2,v2}; capitolo intero => v1=1, v2=999 */
+const REF_RE = /^\s*(?:(?:commento|commentario)\s+(?:a|ai|alla|al|su|di)\s+)?([1-3]?\s?[A-Za-zÀ-ÿ'][A-Za-zÀ-ÿ'.]*(?:\s+dei\s+Cantici)?)\.?\s*(\d{1,3})(?:\s*[:,.]\s*(\d{1,3})(?:\s*[-–—]\s*(?:(\d{1,3})\s*[:,.]\s*)?(\d{1,3}))?|\s*[-–—]\s*(\d{1,3})(?!\s*[:,.]\s*\d))?(.*)$/;
+function parseRefPrefix(str) {
+  const m = REF_RE.exec(str); if (!m) return null;
+  const bk = bookIdx(m[1]); if (bk < 0) return null;
+  const c1 = +m[2]; let r;
+  if (m[3]) { const v1 = +m[3]; let c2 = c1, v2 = v1; if (m[5]) { v2 = +m[5]; if (m[4]) c2 = +m[4]; } r = { bk, c1, v1, c2, v2 }; }
+  else if (m[6]) r = { bk, c1, v1: 1, c2: +m[6], v2: 999 };
+  else r = { bk, c1, v1: 1, c2: c1, v2: 999 };
+  if (r.c2 < r.c1 || (r.c2 === r.c1 && r.v2 < r.v1)) return null;
+  return { ref: r, rest: m[7] || '' };
+}
+function parseRef(str) { const p = parseRefPrefix(str); return p && /^[\s.;]*$/.test(p.rest) ? p.ref : null; }
+const P = (c, v) => c * 1000 + v;
+const refHas = (r, c, v) => P(c, v) >= P(r.c1, r.v1) && P(c, v) <= P(r.c2, r.v2);
+const refSpan = r => P(r.c2, r.v2 > 900 ? 150 : r.v2) - P(r.c1, r.v1);
+function refLabel(r) {
+  const b = BOOKS[r.bk].n, whole = r.v1 === 1 && r.v2 === 999;
+  if (r.c1 === r.c2) return whole ? `${b} ${r.c1}` : r.v1 === r.v2 ? `${b} ${r.c1}:${r.v1}` : `${b} ${r.c1}:${r.v1}-${r.v2}`;
+  return whole ? `${b} ${r.c1}-${r.c2}` : `${b} ${r.c1}:${r.v1}–${r.c2}:${r.v2}`;
+}
+const rr = (bk, c, v1, v2 = v1) => ({ bk, c1: c, v1, c2: c, v2 });
+function groupRuns(vs) { // [3,4,5,9] -> [[3,5],[9,9]]
+  const a = [...vs].sort((x, y) => x - y), out = [];
+  for (const v of a) { const l = out[out.length - 1]; if (l && l[1] + 1 === v) l[1] = v; else out.push([v, v]); }
+  return out;
+}
 
-  /* ---------- Archivio sul dispositivo ---------- */
-  const KEYS = { notes: "lp_notes", sermons: "lp_sermons", comments: "lp_comments" };
-  function load(key) {
+/* ============ archivio (IndexedDB con ripiego su localStorage) ============ */
+const KV = {
+  db: null,
+  async init() {
+    try { this.db = await new Promise((res, rej) => { const r = indexedDB.open('laparola', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+    catch (e) { this.db = null; }
+  },
+  get(k) {
+    if (!this.db) { try { return Promise.resolve(JSON.parse(localStorage.getItem('lp_' + k))); } catch (e) { return Promise.resolve(null); } }
+    return new Promise((res, rej) => { const q = this.db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result ?? null); q.onerror = () => rej(q.error); });
+  },
+  set(k, v) {
+    if (!this.db) { try { localStorage.setItem('lp_' + k, JSON.stringify(v)); } catch (e) { toast('Memoria piena: scarica un backup'); } return Promise.resolve(); }
+    return new Promise((res, rej) => { const t = this.db.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); });
+  },
+  del(k) {
+    if (!this.db) { localStorage.removeItem('lp_' + k); return Promise.resolve(); }
+    return new Promise((res, rej) => { const t = this.db.transaction('kv', 'readwrite'); t.objectStore('kv').delete(k); t.oncomplete = res; t.onerror = () => rej(t.error); });
+  }
+};
+/* dati utente */
+let D = { settings: { size: 19, theme: 'carta', bible: null, last: { bk: 42, ch: 3 }, legend: {} }, hl: {}, notes: [], marks: {}, sermons: [], bibles: [] };
+let C = { list: [] };           /* commentari */
+let BIBLE = null;               /* testo attivo: array di 66 {chapters:[[versi]]} */
+let BID = null;                 /* id versione attiva */
+let _st, _stc;
+const save = () => { clearTimeout(_st); _st = setTimeout(() => KV.set('data', D), 250); };
+const saveC = () => { clearTimeout(_stc); _stc = setTimeout(() => KV.set('comms', C), 250); };
+
+/* ============ strati (fogli e pagine) con tasto Indietro ============ */
+const layers = [];
+function openLayer(kind, fn, opts = {}) {
+  const d = document.createElement('div');
+  d.className = 'layer ' + kind + (opts.cls ? ' ' + opts.cls : '');
+  d.fn = fn; d.ctx = opts.ctx || {};
+  $('#layers').appendChild(d); layers.push(d);
+  history.pushState({ l: layers.length }, '');
+  refreshLayer(d);
+  return d;
+}
+function refreshLayer(d) {
+  const st = d.querySelector('.panel') ? d.querySelector('.panel').scrollTop : 0;
+  const inner = d.fn(d);
+  d.innerHTML = (d.classList.contains('sheet') ? '<div class="bk" data-act="close"></div>' : '') + `<div class="panel">${inner}</div>`;
+  const p = d.querySelector('.panel'); if (p) p.scrollTop = st;
+  if (d.mount) d.mount(d);
+}
+const refreshTop = () => layers.length && refreshLayer(layers[layers.length - 1]);
+function closeTop() { if (layers.length) history.back(); }
+function closeAll() { const n = layers.length; if (!n) return; while (layers.length) layers.pop().remove(); history.go(-n); }
+addEventListener('popstate', e => { const l = (e.state && e.state.l) || 0; while (layers.length > l) layers.pop().remove(); });
+/* ============ lettore ============ */
+const ACT = {};
+const COLORS = [['Limone', '#FFF2A8'], ['Albicocca', '#FFD8A8'], ['Salmone', '#FFB9B0'], ['Rosa', '#FFC4E1'], ['Glicine', '#E6C9FF'], ['Pervinca', '#C7C9FF'],
+  ['Cielo', '#BEDFFF'], ['Acqua', '#B5EEF0'], ['Menta', '#BFF0D0'], ['Pistacchio', '#D5EFA8'], ['Sabbia', '#F1E0BD'], ['Perla', '#D9D9DE']];
+const S = { tab: 'read', bk: 42, ch: 3, sel: null, pick: null, extend: false };
+const words = t => (t || '').match(/\S+\s*/g) || [];
+const hkey = (bk, ch, v) => `${BID}|${bk}|${ch}|${v}`;
+const verseTxt = (bk, ch, v) => (BIBLE && BIBLE[bk].chapters[ch - 1] && BIBLE[bk].chapters[ch - 1][v - 1]) || '';
+const nCh = bk => (BIBLE ? BIBLE[bk].chapters.length : 0);
+const bibleName = () => (D.bibles.find(b => b.id === BID) || {}).name || '';
+const hasBook = bk => BIBLE && BIBLE[bk].chapters.length > 0;
+
+async function loadBible(id) {
+  const t = await KV.get('bible:' + id); if (!t) return false;
+  BIBLE = t; BID = id; D.settings.bible = id; return true;
+}
+function normalizeBible(raw) {
+  if (raw && !Array.isArray(raw) && Array.isArray(raw.books)) raw = raw.books;
+  if (!Array.isArray(raw)) throw new Error('Formato non riconosciuto');
+  const out = BOOKS.map(() => ({ chapters: [] })); let n = 0;
+  raw.forEach((b, i) => {
+    let idx = raw.length === 66 ? i : -1;
+    if (idx < 0 && b.name) idx = bookIdx(b.name);
+    if (idx < 0 && b.abbrev) idx = bookIdx(b.abbrev);
+    if (idx < 0 || !Array.isArray(b.chapters)) return;
+    out[idx] = { chapters: b.chapters.map(c => c.map(v => String(v).replace(/\s+/g, ' ').trim())) }; n++;
+  });
+  if (!n) throw new Error('Nessun libro riconosciuto');
+  return out;
+}
+function parseBibleText(text) {
+  const out = BOOKS.map(() => ({ chapters: [] })); let n = 0;
+  for (const line of text.replace(/\r/g, '').split('\n')) {
+    const m = /^\s*(.+?)\s+(\d{1,3})\s*[:,.]\s*(\d{1,3})\s+(\S.*)$/.exec(line); if (!m) continue;
+    const bk = bookIdx(m[1]); if (bk < 0) continue;
+    const ch = out[bk].chapters; while (ch.length < +m[2]) ch.push([]);
+    const vs = ch[+m[2] - 1]; while (vs.length < +m[3] - 1) vs.push(''); vs[+m[3] - 1] = m[4].trim(); n++;
+  }
+  if (!n) throw new Error('Nessun versetto riconosciuto (formato: «Giovanni 3:16 testo…», un versetto per riga)');
+  return out;
+}
+async function installBible(id, name, bible) {
+  await KV.set('bible:' + id, bible);
+  D.bibles = D.bibles.filter(b => b.id !== id); D.bibles.push({ id, name });
+  await loadBible(id); save();
+  if (!hasBook(S.bk)) { const f = BOOKS.findIndex((_, i) => hasBook(i)); if (f >= 0) { S.bk = f; S.ch = 1; } }
+  S.ch = Math.min(S.ch, nCh(S.bk) || 1);
+  renderAll();
+}
+
+/* ----- rendering ----- */
+function verseHTML(bk, ch, v, t) {
+  const ws = words(t), runs = D.hl[hkey(bk, ch, v)] || [], col = new Array(ws.length).fill(-1);
+  runs.forEach(([a, b, c]) => { for (let i = a; i <= b && i < ws.length; i++) col[i] = c; });
+  const notes = D.notes.filter(n => n.bk === bk && n.ch === ch && n.v1 <= v && v <= n.v2), ends = notes.filter(n => n.v2 === v);
+  let h = `<span class="vs${D.marks[`${bk}.${ch}.${v}`] ? ' bm' : ''}${notes.length ? ' hasnote' : ''}" data-v="${v}"><sup class="vn">${v}</sup>`;
+  h += ws.map((w, i) => col[i] >= 0 ? `<span class="w h" data-i="${i}" style="--hc:${COLORS[col[i]][1]}">${esc(w)}</span>` : `<span class="w" data-i="${i}">${esc(w)}</span>`).join('');
+  if (ends.length) h += `<button class="ni" data-act="note" data-ids="${ends.map(n => n.id).join(',')}" aria-label="Note">${ic('note')}${ends.length > 1 ? `<b>${ends.length}</b>` : ''}</button>`;
+  return h + '</span> ';
+}
+function renderReader() {
+  const box = $('#text'), bk = S.bk, ch = S.ch;
+  $('#refbtn').innerHTML = `${esc(BOOKS[bk].n)} ${ch} ${ic('down')}${BID ? `<small>${esc(bibleName())}</small>` : ''}`;
+  if (!BIBLE) {
+    box.innerHTML = `<div class="empty" style="font-family:system-ui"><h2>Installa una Bibbia</h2>Scarica la <b>Riveduta 2020</b> (richiede internet una volta sola, poi funziona offline) oppure importa il tuo file, per esempio la <b>Nuova Riveduta 2006</b>.<div style="display:grid;gap:10px;margin-top:18px"><button class="btn" data-act="dlrived">${ic('down2')} Scarica Riveduta 2020</button><button class="btn sec" data-act="impbible">${ic('up2')} Importa file (JSON o testo)</button></div></div>`;
+    $('#chnav').innerHTML = ''; return;
+  }
+  const vs = (BIBLE[bk].chapters[ch - 1]) || [];
+  box.innerHTML = vs.length ? vs.map((t, i) => verseHTML(bk, ch, i + 1, t)).join('') : `<div class="empty" style="font-family:system-ui">Questo capitolo non è presente nella versione installata.</div>`;
+  const pv = prevCh(), nx = nextCh();
+  $('#chnav').innerHTML = `<button data-act="prevch" ${pv ? '' : 'disabled'}>${ic('left')} Precedente</button><button data-act="nextch" ${nx ? '' : 'disabled'}>Successivo ${ic('right')}</button>`;
+  paintSel();
+}
+function prevCh() { if (S.ch > 1) return [S.bk, S.ch - 1]; for (let b = S.bk - 1; b >= 0; b--) if (hasBook(b)) return [b, nCh(b)]; return null; }
+function nextCh() { if (S.ch < nCh(S.bk)) return [S.bk, S.ch + 1]; for (let b = S.bk + 1; b < 66; b++) if (hasBook(b)) return [b, 1]; return null; }
+function goto(bk, ch, v) {
+  if (!BIBLE) return toast('Installa prima una Bibbia');
+  closeAll(); clearSel();
+  S.bk = bk; S.ch = Math.max(1, Math.min(ch, nCh(bk) || 1)); D.settings.last = { bk: S.bk, ch: S.ch }; save();
+  setTab('read'); renderReader();
+  if (v) { const e = $(`#text .vs[data-v="${v}"]`); if (e) { setTimeout(() => { e.scrollIntoView({ block: 'center' }); e.classList.add('flash'); }, 30); return; } }
+  scrollTo(0, 0);
+}
+function setTab(t) {
+  S.tab = t;
+  $$('.view').forEach(v => v.classList.toggle('on', v.id === 'v-' + t));
+  $$('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  if (t !== 'read') clearSel();
+  if (t === 'ser') renderSermons(); if (t === 'com') renderComm(); if (t === 'me') renderMe();
+}
+
+/* ----- selezione ----- */
+const sortedVerses = () => [...S.sel.verses].sort((a, b) => a - b);
+const nW = v => words(verseTxt(S.bk, S.ch, v)).length;
+function targets() {
+  if (S.sel.words) { const { a, b } = S.sel.words, out = []; for (let v = a.v; v <= b.v; v++) { const n = nW(v); out.push({ v, ws: v === a.v ? a.i : 0, we: v === b.v ? b.i : n - 1 }); } return out; }
+  return sortedVerses().map(v => ({ v, ws: 0, we: nW(v) - 1 }));
+}
+function selRefs() { return groupRuns(S.sel.verses).map(([a, b]) => rr(S.bk, S.ch, a, b)); }
+function selLabel() { const rs = selRefs(); return rs.map((r, i) => i === 0 ? refLabel(r) : (r.v1 === r.v2 ? r.v1 : `${r.v1}-${r.v2}`)).join(', '); }
+function paintSel() {
+  $$('#text .vs').forEach(e => e.classList.toggle('sel', !!S.sel && S.sel.verses.has(+e.dataset.v)));
+  $$('#text .w.pk,#text .w.pr').forEach(e => e.classList.remove('pk', 'pr'));
+  if (S.pick && S.pick.a) { const e = $(`#text .vs[data-v="${S.pick.a.v}"] .w[data-i="${S.pick.a.i}"]`); if (e) e.classList.add('pk'); }
+  if (S.sel && S.sel.words) {
+    const { a, b } = S.sel.words;
+    $$('#text .vs').forEach(vs => { const v = +vs.dataset.v; if (v < a.v || v > b.v) return;
+      $$('.w', vs).forEach(w => { const i = +w.dataset.i; if ((v > a.v || i >= a.i) && (v < b.v || i <= b.i)) w.classList.add('pr'); }); });
+  }
+}
+function setSel(sel) { S.sel = sel; paintSel(); showSheet(); }
+function clearSel(keepNative) {
+  S.sel = null; S.pick = null; S.extend = false;
+  if (!keepNative) { const g = getSelection(); if (g) g.removeAllRanges(); }
+  if ($('#text')) paintSel();
+  hideSheet();
+}
+function toggleVerse(v) {
+  let s = S.sel && !S.sel.words ? S.sel.verses : new Set();
+  s = new Set(s);
+  if (S.extend && s.size) { const a = Math.min(...s), b = Math.max(...s); const lo = Math.min(a, v), hi = Math.max(b, v); s = new Set(); for (let x = lo; x <= hi; x++) s.add(x); S.extend = false; }
+  else if (s.has(v)) s.delete(v); else s.add(v);
+  S.pick = null;
+  if (!s.size) return clearSel();
+  setSel({ verses: s, words: null });
+}
+function pickWord(v, i) {
+  if (!S.pick.a) { S.pick.a = { v, i }; paintSel(); showSheet(); return; }
+  let a = S.pick.a, b = { v, i };
+  if (b.v < a.v || (b.v === a.v && b.i < a.i)) [a, b] = [b, a];
+  const vs = new Set(); for (let x = a.v; x <= b.v; x++) vs.add(x);
+  S.pick = null; setSel({ verses: vs, words: { a, b }, native: false });
+}
+/* selezione nativa col dito (tasto lungo + trascinamento) */
+let selT, lastSelAt = 0;
+function cmpPts(an, ao, bn, bo) {
+  const r1 = document.createRange(); r1.setStart(an, ao); r1.collapse(true);
+  const r2 = document.createRange(); r2.setStart(bn, bo); r2.collapse(true);
+  return r1.compareBoundaryPoints(Range.START_TO_START, r2);
+}
+function onNativeSel() {
+  const g = getSelection(); if (!g || !g.rangeCount || g.isCollapsed) return;
+  const r = g.getRangeAt(0), box = $('#text'); if (!box || !box.contains(r.commonAncestorContainer) || S.tab !== 'read') return;
+  lastSelAt = Date.now();
+  let first = null, last = null;
+  for (const w of $$('.w', box)) {
+    if (!r.intersectsNode(w)) continue;
+    const t = w.firstChild; if (!t) continue;
+    const end = t.data.trimEnd().length;
+    if (cmpPts(r.startContainer, r.startOffset, t, end) < 0 && cmpPts(r.endContainer, r.endOffset, t, 0) > 0) { if (!first) first = w; last = w; }
+  }
+  if (!first) return;
+  const A = { v: +first.closest('.vs').dataset.v, i: +first.dataset.i }, B = { v: +last.closest('.vs').dataset.v, i: +last.dataset.i };
+  const vs = new Set(); for (let x = A.v; x <= B.v; x++) vs.add(x);
+  S.pick = null; S.extend = false;
+  S.sel = { verses: vs, words: { a: A, b: B }, native: true }; paintSel(); showSheet();
+}
+document.addEventListener('selectionchange', () => { clearTimeout(selT); selT = setTimeout(onNativeSel, 200); });
+
+/* ----- pannello azioni ----- */
+let _shKey = '';
+function hideSheet() { const s = $('#sheet'); s.classList.remove('on'); s.innerHTML = ''; _shKey = ''; $('#text').style.paddingBottom = ''; }
+function commentsForSel() { return S.sel ? commentsFor(S.bk, S.ch, [...S.sel.verses]) : []; }
+function showSheet() {
+  const s = S.sel; if (!s) return hideSheet();
+  const nWd = s.words ? targets().reduce((n, t) => n + (t.we - t.ws + 1), 0) : 0;
+  const allBm = sortedVerses().every(v => D.marks[`${S.bk}.${S.ch}.${v}`]);
+  const nc = commentsForSel().length;
+  const hint = S.pick ? `<div class="hint">${S.pick.a ? 'Ora tocca l’ultima parola' : 'Tocca la prima parola da evidenziare'}</div>` : S.extend ? `<div class="hint">Tocca l’ultimo versetto dell’intervallo</div>` : '';
+  const html = `<div class="in"><div class="sh-top"><b>${esc(selLabel())} ${s.words ? `<small>· ${nWd} parol${nWd === 1 ? 'a' : 'e'}</small>` : ''}</b><button class="ib" data-act="selclear" aria-label="Chiudi">${ic('x')}</button></div>${hint}
+  <div class="cols">${COLORS.map((c, i) => `<button class="cdot" data-act="color" data-i="${i}" style="background:${c[1]}" aria-label="${c[0]}"></button>`).join('')}<button class="cdot x" data-act="color" data-i="-1" aria-label="Rimuovi evidenziazione">${ic('ban')}</button></div>
+  <div class="acts">
+    <button data-act="addnote">${ic('note')}Nota</button>
+    <button data-act="comments">${ic('msg')}Commentario${nc ? `<span class="bd">${nc}</span>` : ''}</button>
+    <button data-act="tosermon">${ic('file')}Sermone</button>
+    <button data-act="bm" class="${allBm ? 'on' : ''}">${ic('bm')}Segnalibro</button>
+    <button data-act="pickmode" class="${S.pick ? 'on' : ''}">${ic('pen')}Parole</button>
+    <button data-act="extend" class="${S.extend ? 'on' : ''}">${ic('ext')}Estendi</button>
+    <button data-act="copy">${ic('copy')}Copia</button>
+    <button data-act="share">${ic('share')}Condividi</button>
+  </div></div>`;
+  const sh = $('#sheet'); sh.classList.add('on');
+  if (html !== _shKey) { sh.innerHTML = html; _shKey = html; }
+  $('#text').style.paddingBottom = (sh.offsetHeight + 30) + 'px';
+}
+function applyColor(ci) {
+  const bk = S.bk, ch = S.ch;
+  targets().forEach(t => {
+    const k = hkey(bk, ch, t.v), runs = paintRuns(D.hl[k] || [], t.ws, t.we, ci < 0 ? null : ci);
+    if (runs.length) D.hl[k] = runs; else delete D.hl[k];
+  });
+  save(); clearSel(); renderReader(); toast(ci < 0 ? 'Evidenziazione rimossa' : 'Evidenziato · visibile in Personale');
+}
+function paintRuns(runs, ws, we, ci) {
+  const out = [];
+  for (const [a, b, c] of runs) {
+    if (b < ws || a > we) { out.push([a, b, c]); continue; }
+    if (a < ws) out.push([a, ws - 1, c]);
+    if (b > we) out.push([we + 1, b, c]);
+  }
+  if (ci != null) out.push([ws, we, ci]);
+  out.sort((x, y) => x[0] - y[0]);
+  const m = []; for (const r of out) { const l = m[m.length - 1]; if (l && l[2] === r[2] && l[1] + 1 >= r[0]) l[1] = Math.max(l[1], r[1]); else m.push(r.slice()); }
+  return m;
+}
+function selPlainText() {
+  if (S.sel.words) {
+    const T = targets(), vs = T.map(t => t.v);
+    const body = T.map(t => words(verseTxt(S.bk, S.ch, t.v)).slice(t.ws, t.we + 1).join('').trim()).join(' … ');
+    return `«${body}»\n${refLabel(rr(S.bk, S.ch, vs[0], vs[vs.length - 1]))} (${bibleName()})`;
+  }
+  return groupRuns(S.sel.verses).map(([a, b]) => { let s = ''; for (let v = a; v <= b; v++) s += `${b > a ? v + ' ' : ''}${verseTxt(S.bk, S.ch, v)} `; return `${refLabel(rr(S.bk, S.ch, a, b))}\n${s.trim()}`; }).join('\n\n') + ` (${bibleName()})`;
+}
+
+/* ----- note ----- */
+function openNoteLayer(ctx) {
+  return openLayer('sheet', d => {
+    const c = d.ctx, n = c.id ? D.notes.find(x => x.id === c.id) : null, ref = n ? rr(n.bk, n.ch, n.v1, n.v2) : c.ref;
+    let q = ''; for (let v = ref.v1; v <= Math.min(ref.v2, ref.v1 + 5); v++) q += `<sup>${v}</sup>${esc(verseTxt(ref.bk, ref.c1, v))} `;
+    const quote = `<div class="vquote" style="font-size:15px">${q}${ref.v2 - ref.v1 > 5 ? '…' : ''}</div>`;
+    if (c.editing || !n) return `<h2 class="t"><span class="ref">${esc(refLabel(ref))}</span> · nota</h2>${quote}<textarea id="noteTx" placeholder="Scrivi la tua nota…" autofocus>${esc(n ? n.text : '')}</textarea><div class="row" style="margin-top:12px"><button class="btn" data-act="notesave">${ic('check')} Salva</button><button class="btn sec" data-act="${n ? 'noteview' : 'close'}">Annulla</button></div>`;
+    return `<h2 class="t"><span class="ref">${esc(refLabel(ref))}</span> · nota <span class="mut">${fmtDate(n.ts)}</span></h2>${quote}<div class="body" style="white-space:pre-wrap">${esc(n.text)}</div><div class="row w" style="margin-top:14px"><button class="btn sec" data-act="noteedit">${ic('pen')} Modifica</button><button class="btn sec" data-act="notegoto" data-bk="${n.bk}" data-c="${n.ch}" data-v="${n.v1}">${ic('book')} Vai al versetto</button><button class="btn sec" data-act="notedel">${ic('trash')} Elimina</button></div>`;
+  }, { ctx });
+}
+ACT.note = el => {
+  const ids = el.dataset.ids.split(',');
+  if (ids.length === 1) return openNoteLayer({ id: ids[0] });
+  openLayer('sheet', () => `<h2 class="t">Note su questo versetto</h2>${ids.map(id => { const n = D.notes.find(x => x.id === id); return n ? `<div class="sr" data-act="noteopen" data-id="${id}"><span class="ref">${esc(refLabel(rr(n.bk, n.ch, n.v1, n.v2)))}</span><div class="clamp">${esc(n.text)}</div></div>` : ''; }).join('')}`);
+};
+ACT.noteopen = el => openNoteLayer({ id: el.dataset.id });
+ACT.addnote = () => {
+  const vs = sortedVerses(), ref = rr(S.bk, S.ch, vs[0], vs[vs.length - 1]);
+  openNoteLayer({ ref, editing: true });
+};
+ACT.noteedit = (el, e, d) => { d.ctx.editing = true; refreshLayer(d); };
+ACT.noteview = (el, e, d) => { d.ctx.editing = false; refreshLayer(d); };
+ACT.notesave = (el, e, d) => {
+  const text = $('#noteTx', d).value.trim(); if (!text) return toast('La nota è vuota');
+  const isNew = !d.ctx.id;
+  if (!isNew) { const n = D.notes.find(x => x.id === d.ctx.id); n.text = text; n.ts = Date.now(); }
+  else { const r = d.ctx.ref; D.notes.push({ id: uid(), bk: r.bk, ch: r.c1, v1: r.v1, v2: r.v2, text, ts: Date.now() }); }
+  save(); clearSel(); renderReader(); if (S.tab === 'me') renderMe(); toast('Nota salvata');
+  if (isNew) closeTop(); else { d.ctx.editing = false; refreshLayer(d); }
+};
+ACT.notedel = (el, e, d) => { if (!confirmed(el, 'Sicuro?')) return; D.notes = D.notes.filter(x => x.id !== d.ctx.id); save(); closeTop(); renderReader(); if (S.tab === 'me') renderMe(); setTimeout(refreshTop, 80); };
+ACT.notegoto = el => goto(+el.dataset.bk, +el.dataset.c, +el.dataset.v);
+
+/* ----- azioni del pannello ----- */
+ACT.color = el => applyColor(+el.dataset.i);
+ACT.selclear = () => clearSel();
+ACT.pickmode = () => { S.extend = false; S.pick = S.pick ? null : { a: null }; if (S.pick) { S.sel = { verses: S.sel.verses, words: null }; } paintSel(); showSheet(); };
+ACT.extend = () => { S.pick = null; S.extend = !S.extend; showSheet(); };
+ACT.bm = () => {
+  const keys = sortedVerses().map(v => `${S.bk}.${S.ch}.${v}`), all = keys.every(k => D.marks[k]);
+  keys.forEach(k => { if (all) delete D.marks[k]; else D.marks[k] = Date.now(); });
+  save(); const s = S.sel; renderReader(); S.sel = s; paintSel(); showSheet(); toast(all ? 'Segnalibro rimosso' : 'Segnalibro aggiunto');
+};
+ACT.copy = async () => { toast((await copyText(selPlainText())) ? 'Copiato negli appunti' : 'Impossibile copiare'); };
+ACT.share = () => shareText(selPlainText(), selLabel());
+ACT.prevch = () => { const p = prevCh(); if (p) goto(p[0], p[1]); };
+ACT.nextch = () => { const n = nextCh(); if (n) goto(n[0], n[1]); };
+ACT.tab = el => setTab(el.dataset.t);
+ACT.close = () => closeTop();
+ACT.gov = el => goto(+el.dataset.bk, +el.dataset.c, +el.dataset.v);
+
+/* ----- tocchi sul testo ----- */
+$('#text').addEventListener('click', e => {
+  if (e.target.closest('[data-act]')) return;
+  if (Date.now() - lastSelAt < 450) return;
+  const g = getSelection(); if (g && !g.isCollapsed) return;
+  const vs = e.target.closest('.vs');
+  if (!vs) { if (S.sel) clearSel(); return; }
+  const v = +vs.dataset.v;
+  if (S.pick) { const w = e.target.closest('.w'); if (w) pickWord(v, +w.dataset.i); return; }
+  vs.classList.remove('flash'); toggleVerse(v);
+});
+
+/* ----- Selettore libro/capitolo, ricerca, aspetto ----- */
+function openPicker() {
+  const d = openLayer('page', d => `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>Vai a…</h2></div><div class="pad"><input type="search" id="pkq" placeholder="Es. Gv 3:16 oppure «Salmi»" autocomplete="off"></div><div id="pkres"></div>`, { ctx: { mode: 'books', bk: 0 } });
+  d.mount = d => { pkRender(d); const i = $('#pkq', d); i.oninput = () => { d.ctx.mode = 'books'; pkRender(d); }; i.onkeydown = e => { if (e.key === 'Enter') { const r = parseRef(i.value); if (r) goto(r.bk, r.c1, r.v1 > 1 || r.v1 === r.v2 ? r.v1 : 0); } }; };
+  d.mount(d);
+}
+function pkRender(d) {
+  const box = $('#pkres', d), q = $('#pkq', d).value.trim();
+  if (d.ctx.mode === 'chapters') {
+    const bk = d.ctx.bk; $('#pkq', d).parentNode.style.display = 'none';
+    box.innerHTML = `<div class="pad"><div class="row" style="margin-bottom:12px"><button class="ib" data-act="pkback">${ic('left')}</button><b style="font-size:18px">${esc(BOOKS[bk].n)}</b></div><div class="chgrid">${Array.from({ length: nCh(bk) }, (_, i) => `<button data-act="gov" data-bk="${bk}" data-c="${i + 1}" data-v="0">${i + 1}</button>`).join('')}</div></div>`; return;
+  }
+  $('#pkq', d).parentNode.style.display = '';
+  const pr = q ? parseRefPrefix(q) : null; let top = '';
+  if (pr && /^[\s.;]*$/.test(pr.rest)) { const r = pr.ref; top = `<div class="pad" style="padding-bottom:0"><button class="btn block" data-act="gov" data-bk="${r.bk}" data-c="${r.c1}" data-v="${r.v1 === 1 && r.v2 === 999 ? 0 : r.v1}">${ic('book')} Vai a ${esc(refLabel(r))}</button></div>`; }
+  const nq = norm(q).replace(/[\s.]/g, '');
+  const list = BOOKS.map((b, i) => i).filter(i => hasBook(i) && (!nq || norm(BOOKS[i].n).replace(/\s/g, '').includes(nq) || BOOKS[i].a.some(a => a.startsWith(nq))));
+  const sec = (t, a, b) => { const l = list.filter(i => i >= a && i < b); return l.length ? `<div class="sech" style="padding:0 14px">${t}</div><div class="bkgrid" style="padding:0 14px">${l.map(i => `<button data-act="pkbook" data-bk="${i}">${esc(BOOKS[i].n)}</button>`).join('')}</div>` : ''; };
+  box.innerHTML = top + (BIBLE ? sec('Antico Testamento', 0, 39) + sec('Nuovo Testamento', 39, 66) : '<div class="empty">Nessuna Bibbia installata.</div>');
+}
+ACT.pkbook = (el, e, d) => { d.ctx.mode = 'chapters'; d.ctx.bk = +el.dataset.bk; pkRender(d); };
+ACT.pkback = (el, e, d) => { d.ctx.mode = 'books'; pkRender(d); };
+ACT.picker = () => openPicker();
+
+function openSearch() {
+  const d = openLayer('page', () => `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>Cerca nel testo</h2></div><div class="pad"><input type="search" id="sq" placeholder="Una o più parole…" autocomplete="off"></div><div id="sres" class="pad" style="padding-top:0"></div>`);
+  d.mount = d => { const i = $('#sq', d); let t; i.oninput = () => { clearTimeout(t); t = setTimeout(() => runSearch(i.value, $('#sres', d)), 250); }; i.focus(); };
+  d.mount(d);
+}
+function runSearch(q, box) {
+  const terms = norm(q).split(/\s+/).filter(x => x.length > 1); if (!terms.length || !BIBLE) { box.innerHTML = ''; return; }
+  const res = []; let total = 0;
+  for (let b = 0; b < 66; b++) BIBLE[b].chapters.forEach((vs, ci) => vs.forEach((t, vi) => { const n = norm(t); if (terms.every(x => n.includes(x))) { total++; if (res.length < 120) res.push([b, ci + 1, vi + 1, t]); } }));
+  const re = new RegExp('(' + terms.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')', 'ig');
+  box.innerHTML = `<div class="mut" style="margin-bottom:6px">${total} risultat${total === 1 ? 'o' : 'i'}${total > 120 ? ' (mostro i primi 120)' : ''}</div>` + res.map(([b, c, v, t]) => `<div class="sr" data-act="gov" data-bk="${b}" data-c="${c}" data-v="${v}"><span class="ref">${esc(refLabel(rr(b, c, v)))}</span><div style="font-family:Georgia,serif">${esc(t).replace(re, '<mark>$1</mark>')}</div></div>`).join('');
+}
+ACT.search = () => openSearch();
+
+function applyTheme() {
+  document.body.className = 't-' + (D.settings.theme === 'carta' ? 'carta' : D.settings.theme);
+  document.documentElement.style.setProperty('--fs', D.settings.size + 'px');
+}
+ACT.aa = () => openLayer('sheet', () => `<h2 class="t">Aspetto</h2><label class="l">Dimensione del testo: <span id="fsv">${D.settings.size}</span> px</label><input type="range" id="fs" min="15" max="32" value="${D.settings.size}"><label class="l">Tema</label><div class="seg" style="margin:0">${[['carta', 'Carta'], ['chiaro', 'Chiaro'], ['scuro', 'Scuro']].map(([k, n]) => `<button data-act="theme" data-k="${k}" class="${D.settings.theme === k ? 'on' : ''}">${n}</button>`).join('')}</div>`);
+ACT.theme = (el, e, d) => { D.settings.theme = el.dataset.k; save(); applyTheme(); $$('.seg button', d).forEach(b => b.classList.toggle('on', b === el)); };
+document.addEventListener('input', e => { if (e.target.id === 'fs') { D.settings.size = +e.target.value; $('#fsv').textContent = e.target.value; applyTheme(); save(); } });
+
+/* ----- installazione Bibbia ----- */
+ACT.dlrived = async () => {
+  const d = openLayer('sheet', () => `<h2 class="t">Scarico la Riveduta 2020…</h2><div class="prog"><b id="pgb"></b></div><div class="mut" id="pgt">Connessione…</div>`);
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/thiagobodruk/bible/master/json/it_irb20.json'); if (!res.ok) throw new Error('Download non riuscito (' + res.status + ')');
+    const total = +res.headers.get('content-length') || 4300000; let got = 0, chunks = [];
+    if (res.body && res.body.getReader) { const rd = res.body.getReader(); for (;;) { const { done, value } = await rd.read(); if (done) break; chunks.push(value); got += value.length; const b = $('#pgb', d); if (b) b.style.width = Math.min(100, got / total * 100) + '%'; const t = $('#pgt', d); if (t) t.textContent = (got / 1048576).toFixed(1) + ' MB'; } }
+    else { chunks.push(new Uint8Array(await res.arrayBuffer())); }
+    const txt = new TextDecoder('utf-8').decode(await new Blob(chunks).arrayBuffer()).replace(/^﻿/, '');
+    await installBible('it_irb20', 'Riveduta 2020', normalizeBible(JSON.parse(txt)));
+    closeTop(); toast('Riveduta 2020 installata');
+  } catch (err) { const t = $('#pgt', d); if (t) t.innerHTML = `<span style="color:#b3382c">${esc(err.message)}</span><br>Controlla la connessione, oppure usa «Importa file».`; }
+};
+ACT.impbible = async () => {
+  const f = await pickFile('.json,.txt,application/json,text/plain'); if (!f) return;
+  let bible; try { try { bible = normalizeBible(JSON.parse(f.text.replace(/^﻿/, ''))); } catch (e) { bible = parseBibleText(f.text); } } catch (err) { return toast(err.message); }
+  const nm = f.name.replace(/\.[^.]+$/, '');
+  openLayer('sheet', d => `<h2 class="t">Nome della versione</h2><input type="text" id="bnm" value="${esc(nm)}" placeholder="Es. Nuova Riveduta 2006"><div class="mut" style="margin-top:8px">Libri trovati: ${bible.filter(b => b.chapters.length).length} su 66</div><div class="row" style="margin-top:14px"><button class="btn" data-act="bsave">${ic('check')} Installa</button><button class="btn sec" data-act="close">Annulla</button></div>`, { ctx: { bible } });
+};
+ACT.bsave = async (el, e, d) => {
+  const name = $('#bnm', d).value.trim() || 'Bibbia'; const id = 'imp_' + (norm(name).replace(/[^a-z0-9]+/g, '_') || uid());
+  await installBible(id, name, d.ctx.bible); closeTop(); toast(name + ' installata');
+};
+/* ============ area personale ============ */
+const M = { sub: 'hl', color: -1, legend: false };
+const legendOf = i => (D.settings.legend && D.settings.legend[i]) || COLORS[i][0];
+function hlItems() {
+  const items = [];
+  if (!BID) return items;
+  Object.keys(D.hl).filter(k => k.startsWith(BID + '|')).forEach(k => {
+    const [, bk, ch, v] = k.split('|').map((x, i) => i ? +x : x), n = words(verseTxt(bk, ch, v)).length;
+    D.hl[k].forEach(([a, b, c]) => items.push({ bk, ch, v, ws: a, we: Math.min(b, n - 1), c, whole: a === 0 && b >= n - 1 }));
+  });
+  items.sort((x, y) => x.bk - y.bk || x.ch - y.ch || x.v - y.v || x.ws - y.ws);
+  const out = [];
+  for (const it of items) {
+    const l = out[out.length - 1];
+    if (l && it.whole && l.whole && l.c === it.c && l.bk === it.bk && l.ch === it.ch && l.parts[l.parts.length - 1].v + 1 === it.v) l.parts.push(it);
+    else out.push({ bk: it.bk, ch: it.ch, c: it.c, whole: it.whole, parts: [it] });
+  }
+  return out;
+}
+const itemRef = it => rr(it.bk, it.ch, it.parts[0].v, it.parts[it.parts.length - 1].v);
+function hlQuote(it) {
+  return it.parts.map(p => {
+    const ws = words(verseTxt(it.bk, it.ch, p.v)), pre = ws.slice(0, p.ws).join(''), mid = ws.slice(p.ws, p.we + 1).join('').trimEnd(), post = ws.slice(p.we + 1).join('');
+    return `<sup>${p.v}</sup>${esc(pre)}<mark style="--hc:${COLORS[it.c][1]}">${esc(mid)}</mark>${esc(post)}`;
+  }).join(' ');
+}
+function renderMe() {
+  const v = $('#v-me');
+  let h = `<div class="vh"><h1>Il mio studio</h1><button class="ib" data-act="aa" aria-label="Aspetto">${ic('type')}</button></div>
+  <div class="seg">${[['hl', 'Evidenziati'], ['notes', 'Note'], ['marks', 'Segnalibri'], ['data', 'Dati']].map(([k, n]) => `<button data-act="mesub" data-k="${k}" class="${M.sub === k ? 'on' : ''}">${n}</button>`).join('')}</div>`;
+  if (M.sub === 'hl') {
+    const all = hlItems(), cnt = {}; all.forEach(i => cnt[i.c] = (cnt[i.c] || 0) + 1);
+    const items = M.color < 0 ? all : all.filter(i => i.c === M.color);
+    h += `<div class="chips"><button class="chip ${M.color < 0 ? 'on' : ''}" data-act="mecolor" data-i="-1">Tutti · ${all.length}</button>${COLORS.map((c, i) => cnt[i] ? `<button class="chip ${M.color === i ? 'on' : ''}" data-act="mecolor" data-i="${i}"><i style="background:${c[1]}"></i>${esc(legendOf(i))} · ${cnt[i]}</button>` : '').join('')}<button class="chip" data-act="legend">${ic('pen')} Legenda</button></div>`;
+    if (M.legend) h += `<div class="card"><div class="mut" style="margin-bottom:6px">Dai un significato ai colori (es. giallo = promesse). Si salva da solo.</div>${COLORS.map((c, i) => `<div class="lg"><i style="background:${c[1]}"></i><input type="text" data-leg="${i}" value="${esc(D.settings.legend[i] || '')}" placeholder="${c[0]}"></div>`).join('')}</div>`;
+    if (!BID) h += `<div class="empty">Installa una Bibbia per vedere le evidenziazioni.</div>`;
+    else if (!items.length) h += `<div class="empty"><h2>Nessuna evidenziazione</h2>Nel testo tocca un versetto, oppure tieni premuto su una parola e trascina per scegliere dove iniziare e finire, poi scegli un colore.<br><br><span class="mut">Le evidenziazioni sono legate alla versione attiva (${esc(bibleName())}).</span></div>`;
+    else h += items.map((it, i) => `<div class="card tap" data-act="hlitem" data-i="${all.indexOf(it)}"><div class="row"><i style="width:14px;height:14px;border-radius:50%;background:${COLORS[it.c][1]};border:1px solid rgba(0,0,0,.2);display:inline-block"></i><span class="ref">${esc(refLabel(itemRef(it)))}</span><span class="mut">${esc(legendOf(it.c))}</span></div><div class="hl-q">${hlQuote(it)}</div></div>`).join('');
+    me._all = all;
+  }
+  if (M.sub === 'notes') {
+    const ns = [...D.notes].sort((a, b) => a.bk - b.bk || a.ch - b.ch || a.v1 - b.v1);
+    h += ns.length ? ns.map(n => `<div class="card tap" data-act="mynote" data-id="${n.id}"><div class="row"><span class="ref">${esc(refLabel(rr(n.bk, n.ch, n.v1, n.v2)))}</span><span class="sp"></span><span class="mut">${fmtDate(n.ts)}</span></div><div class="clamp" style="margin-top:4px;white-space:pre-wrap">${esc(n.text)}</div></div>`).join('') : `<div class="empty"><h2>Nessuna nota</h2>Seleziona uno o più versetti e tocca «Nota»: comparirà un’icona accanto al testo.</div>`;
+  }
+  if (M.sub === 'marks') {
+    const ks = Object.keys(D.marks).map(k => k.split('.').map(Number)).sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+    h += ks.length ? ks.map(([b, c, v]) => `<div class="card tap" data-act="gov" data-bk="${b}" data-c="${c}" data-v="${v}"><div class="row"><span class="ref">${esc(refLabel(rr(b, c, v)))}</span><span class="sp"></span><button class="ib" data-act="markdel" data-k="${b}.${c}.${v}" aria-label="Rimuovi">${ic('x')}</button></div><div class="clamp" style="font-family:Georgia,serif">${esc(verseTxt(b, c, v))}</div></div>`).join('') : `<div class="empty"><h2>Nessun segnalibro</h2>Seleziona un versetto e tocca «Segnalibro».</div>`;
+  }
+  if (M.sub === 'data') {
+    h += `<div class="sech" style="padding:0 14px">Versioni della Bibbia</div>` + (D.bibles.length ? D.bibles.map(b => `<div class="card"><div class="row"><b style="flex:1">${esc(b.name)}</b>${b.id === BID ? '<span class="badge">attiva</span>' : `<button class="btn sec sm" data-act="bact" data-id="${b.id}">Attiva</button>`}<button class="ib" data-act="bdel" data-id="${b.id}" aria-label="Elimina">${ic('trash')}</button></div></div>`).join('') : '<div class="empty" style="padding:10px">Nessuna versione installata.</div>') +
+      `<div class="card"><div class="row w"><button class="btn sm" data-act="dlrived">${ic('down2')} Scarica Riveduta 2020</button><button class="btn sec sm" data-act="impbible">${ic('up2')} Importa file</button></div><div class="mut" style="margin-top:8px">Per la <b>Nuova Riveduta 2006</b> importa un tuo file: JSON (come la Riveduta) oppure testo con un versetto per riga, nel formato «Giovanni 3:16 testo…».</div></div>
+      <div class="sech" style="padding:0 14px">Backup</div><div class="card"><div class="row w"><button class="btn sec sm" data-act="bkexp">${ic('down2')} Scarica backup</button><button class="btn sec sm" data-act="bkimp">${ic('up2')} Ripristina</button></div><div class="mut" style="margin-top:8px">Il backup contiene evidenziazioni, note, segnalibri, sermoni e commentari (non il testo biblico). ${D.notes.length} note · ${Object.keys(D.hl).length} versetti evidenziati · ${D.sermons.length} sermoni · ${C.list.length} commentari.</div></div>`;
+  }
+  v.innerHTML = h;
+}
+const me = {};
+ACT.mesub = el => { M.sub = el.dataset.k; renderMe(); };
+ACT.mecolor = el => { M.color = +el.dataset.i; renderMe(); };
+ACT.legend = () => { M.legend = !M.legend; renderMe(); };
+document.addEventListener('change', e => { const i = e.target.dataset && e.target.dataset.leg; if (i != null && i !== '') { D.settings.legend[i] = e.target.value.trim(); save(); } });
+ACT.mynote = el => openNoteLayer({ id: el.dataset.id });
+ACT.markdel = el => { delete D.marks[el.dataset.k]; save(); renderMe(); renderReader(); };
+ACT.hlitem = el => {
+  const it = me._all[+el.dataset.i];
+  openLayer('sheet', () => `<h2 class="t"><span class="ref">${esc(refLabel(itemRef(it)))}</span></h2><div class="hl-q" style="margin-bottom:14px">${hlQuote(it)}</div><div class="mut" style="margin-bottom:6px">Cambia colore</div><div class="cols">${COLORS.map((c, i) => `<button class="cdot" data-act="hlcolor" data-i="${i}" style="background:${c[1]}"></button>`).join('')}<button class="cdot x" data-act="hlcolor" data-i="-1">${ic('ban')}</button></div><div class="row w"><button class="btn sec" data-act="gov" data-bk="${it.bk}" data-c="${it.ch}" data-v="${it.parts[0].v}">${ic('book')} Vai al versetto</button></div>`, { ctx: { it } });
+};
+ACT.hlcolor = (el, e, d) => {
+  const it = d.ctx.it, ci = +el.dataset.i;
+  it.parts.forEach(p => { const k = hkey(it.bk, it.ch, p.v), runs = paintRuns(D.hl[k] || [], p.ws, p.we, ci < 0 ? null : ci); if (runs.length) D.hl[k] = runs; else delete D.hl[k]; });
+  save(); closeTop(); renderMe(); renderReader();
+};
+ACT.bact = async el => { await loadBible(el.dataset.id); save(); clearSel(); S.ch = Math.min(S.ch, nCh(S.bk) || 1); renderAll(); toast('Versione attivata'); };
+ACT.bdel = async el => {
+  const id = el.dataset.id; if (!confirmed(el, 'Sicuro?', 'Le evidenziazioni fatte su questa versione restano salvate ma nascoste.')) return;
+  await KV.del('bible:' + id); D.bibles = D.bibles.filter(b => b.id !== id);
+  if (id === BID) { BIBLE = null; BID = null; D.settings.bible = null; if (D.bibles.length) await loadBible(D.bibles[0].id); }
+  save(); renderAll();
+};
+ACT.bkexp = () => download(`la-parola-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({ app: 'laparola', v: 1, data: { hl: D.hl, notes: D.notes, marks: D.marks, sermons: D.sermons, legend: D.settings.legend }, comms: C }));
+ACT.bkimp = async el => {
+  if (!confirmed(el, 'Sostituisce i dati: tocca ancora', 'Il ripristino sostituisce evidenziazioni, note, segnalibri, sermoni e commentari attuali.')) return;
+  const f = await pickFile('.json,application/json'); if (!f) return;
+  try {
+    const j = JSON.parse(f.text); if (j.app !== 'laparola') throw 0;
+    Object.assign(D, { hl: j.data.hl || {}, notes: j.data.notes || [], marks: j.data.marks || {}, sermons: j.data.sermons || [] }); D.settings.legend = j.data.legend || {};
+    C = j.comms || { list: [] }; save(); saveC(); renderAll(); toast('Backup ripristinato');
+  } catch (e) { toast('File di backup non valido'); }
+};
+
+/* ============ sermoni ============ */
+const SER = id => D.sermons.find(s => s.id === id);
+const touchS = s => { s.updated = Date.now(); save(); };
+function renderSermons() {
+  const list = [...D.sermons].sort((a, b) => b.updated - a.updated);
+  $('#v-ser').innerHTML = `<div class="vh"><h1>Sermoni</h1></div>` + (list.length ? list.map(s => `<div class="card tap" data-act="seropen" data-id="${s.id}"><h3>${esc(s.title || 'Senza titolo')}</h3><div class="mut">${s.points.length} punt${s.points.length === 1 ? 'o' : 'i'} · ${s.points.reduce((n, p) => n + p.verses.length, 0)} versetti · ${fmtDate(s.updated)}</div></div>`).join('') : `<div class="empty"><h2>Nessun sermone</h2>Crea un sermone qui, oppure seleziona dei versetti nel testo e tocca «Sermone» per trasferirli.</div>`) +
+    `<button class="btn fab" data-act="sernew">${ic('plus')} Nuovo sermone</button>`;
+}
+ACT.sernew = () => openLayer('sheet', () => `<h2 class="t">Nuovo sermone</h2><label class="l">Titolo</label><input type="text" id="sntitle" placeholder="Es. La porta stretta"><div class="row" style="margin-top:14px"><button class="btn" data-act="sercreate">${ic('check')} Crea</button><button class="btn sec" data-act="close">Annulla</button></div>`);
+function newSermon(title) { const s = { id: uid(), title: title || 'Senza titolo', created: Date.now(), updated: Date.now(), points: [] }; D.sermons.push(s); save(); return s; }
+ACT.sercreate = (el, e, d) => { const s = newSermon($('#sntitle', d).value.trim()); closeTop(); renderSermons(); setTimeout(() => openSermon(s.id), 80); };
+ACT.seropen = el => openSermon(el.dataset.id);
+function openSermon(id) { openLayer('page', sermonFn, { ctx: { id, predica: false, texts: true, edit: null, title: false } }); }
+function vquote(r) {
+  let h = '';
+  for (let c = r.c1; c <= r.c2; c++) { const max = nCh(r.bk) ? (BIBLE[r.bk].chapters[c - 1] || []).length : 0; const a = c === r.c1 ? r.v1 : 1, b = Math.min(c === r.c2 ? r.v2 : 999, max); for (let v = a; v <= b; v++) h += `<sup>${v}</sup>${esc(verseTxt(r.bk, c, v))} `; }
+  return h || '<span class="mut">Testo non disponibile nella versione attiva</span>';
+}
+function sermonFn(d) {
+  const c = d.ctx, s = SER(c.id), P = c.predica; d.classList.toggle('dark', P);
+  if (!s) return '<div class="empty">Sermone non trovato</div>';
+  const head = `<div class="pg-head"><button class="ib" data-act="close" aria-label="Indietro">${ic('back')}</button><h2>${esc(s.title)}</h2><button class="btn sm ${P ? '' : 'sec'}" data-act="serpredica">${P ? ic('x') + ' Esci' : ic('play') + ' Predica'}</button></div>`;
+  const titleBox = c.title ? `<div class="card"><input type="text" id="sttitle" value="${esc(s.title)}"><div class="row" style="margin-top:10px"><button class="btn sm" data-act="sertsave">${ic('check')} Salva</button><button class="btn sec sm" data-act="sertcancel">Annulla</button></div></div>` : '';
+  const tools = `<div class="chips" style="padding-bottom:0">${c.title ? '' : `<button class="chip" data-act="sertedit">${ic('pen')} Modifica titolo</button>`}<button class="chip" data-act="sertexts">${c.texts ? 'Testi dei versetti: sì' : 'Testi dei versetti: no'}</button>${P ? '' : `<button class="chip" data-act="sercopy">${ic('copy')} Copia</button><button class="chip" data-act="sershare">${ic('share')} Condividi</button><button class="chip" data-act="serdel">${ic('trash')} Elimina</button>`}</div>`;
+  const pts = s.points.map((p, i) => {
+    const editing = c.edit === p.id;
+    return `<div class="card pt"><div class="row"><span class="n">${i + 1}</span><span class="sp"></span>${P ? '' : `<button class="ib" data-act="ptup" data-id="${p.id}" ${i ? '' : 'disabled style="opacity:.3"'}>${ic('up')}</button><button class="ib" data-act="ptdown" data-id="${p.id}" ${i < s.points.length - 1 ? '' : 'disabled style="opacity:.3"'}>${ic('down')}</button><button class="ib" data-act="ptdel" data-id="${p.id}">${ic('trash')}</button>`}</div>
+    ${editing ? `<textarea id="pttx" style="margin:8px 0" placeholder="Idee, parole chiave, appunti…">${esc(p.text)}</textarea><div class="row"><button class="btn sm" data-act="ptsave" data-id="${p.id}">${ic('check')} Salva</button><button class="btn sec sm" data-act="ptcancel">Annulla</button></div>` : `<div class="tx">${p.text ? esc(p.text) : '<span class="mut">Nessun testo</span>'}</div><button class="btn sec sm" data-act="ptedit" data-id="${p.id}">${ic('pen')} Modifica</button>`}
+    <div style="margin-top:10px">${p.verses.map((r, j) => `<div><span class="vchip"><span data-act="vgo" data-bk="${r.bk}" data-c="${r.c1}" data-v="${r.v1 === 1 && r.v2 === 999 ? 0 : r.v1}">${esc(refLabel(r))}</span>${P ? '' : `<button data-act="vdel" data-id="${p.id}" data-j="${j}" aria-label="Rimuovi">${ic('x')}</button>`}</span>${c.texts ? `<div class="vquote">${vquote(r)}</div>` : ''}</div>`).join('')}${P ? '' : `<button class="btn sec sm" data-act="vadd" data-id="${p.id}" style="margin-top:6px">${ic('plus')} Versetto</button>`}</div></div>`;
+  }).join('');
+  return head + titleBox + tools + (pts || `<div class="empty">Nessun punto. Aggiungine uno, oppure trasferisci dei versetti dal testo.</div>`) + (P ? '' : `<div style="padding:4px 14px 20px"><button class="btn block" data-act="ptadd">${ic('plus')} Aggiungi punto</button></div>`);
+}
+const sd = d => SER(d.ctx.id), pt = (d, id) => sd(d).points.find(p => p.id === id);
+ACT.serpredica = (el, e, d) => { d.ctx.predica = !d.ctx.predica; d.ctx.edit = null; refreshLayer(d); };
+ACT.sertexts = (el, e, d) => { d.ctx.texts = !d.ctx.texts; refreshLayer(d); };
+ACT.sertedit = (el, e, d) => { d.ctx.title = true; refreshLayer(d); };
+ACT.sertcancel = (el, e, d) => { d.ctx.title = false; refreshLayer(d); };
+ACT.sertsave = (el, e, d) => { sd(d).title = $('#sttitle', d).value.trim() || 'Senza titolo'; touchS(sd(d)); d.ctx.title = false; refreshLayer(d); renderSermons(); };
+ACT.ptedit = (el, e, d) => { d.ctx.edit = el.dataset.id; refreshLayer(d); const t = $('#pttx', d); if (t) t.focus(); };
+ACT.ptcancel = (el, e, d) => { d.ctx.edit = null; refreshLayer(d); };
+ACT.ptsave = (el, e, d) => { pt(d, el.dataset.id).text = $('#pttx', d).value.trim(); touchS(sd(d)); d.ctx.edit = null; refreshLayer(d); };
+ACT.ptadd = (el, e, d) => { const p = { id: uid(), text: '', verses: [] }; sd(d).points.push(p); touchS(sd(d)); d.ctx.edit = p.id; refreshLayer(d); const t = $('#pttx', d); if (t) { t.focus(); t.scrollIntoView({ block: 'center' }); } };
+ACT.ptdel = (el, e, d) => { if (!confirmed(el, 'Sicuro?')) return; const s = sd(d); s.points = s.points.filter(p => p.id !== el.dataset.id); touchS(s); refreshLayer(d); };
+const mv = (d, id, dir) => { const a = sd(d).points, i = a.findIndex(p => p.id === id), j = i + dir; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; touchS(sd(d)); refreshLayer(d); };
+ACT.ptup = (el, e, d) => mv(d, el.dataset.id, -1);
+ACT.ptdown = (el, e, d) => mv(d, el.dataset.id, 1);
+ACT.vdel = (el, e, d) => { pt(d, el.dataset.id).verses.splice(+el.dataset.j, 1); touchS(sd(d)); refreshLayer(d); };
+ACT.vgo = el => goto(+el.dataset.bk, +el.dataset.c, +el.dataset.v);
+ACT.vadd = (el, e, d) => askRef(r => { pt(d, el.dataset.id).verses.push(r); touchS(sd(d)); refreshLayer(d); });
+ACT.serdel = (el, e, d) => { if (!confirmed(el, 'Sicuro?')) return; D.sermons = D.sermons.filter(s => s.id !== d.ctx.id); save(); closeTop(); renderSermons(); };
+function sermonText(s, withTexts) {
+  return `${s.title}\n${fmtDate(s.created)}\n\n` + s.points.map((p, i) => `${i + 1}. ${p.text}${p.verses.length ? '\n' + p.verses.map(r => '   • ' + refLabel(r) + (withTexts ? ' — ' + vquote(r).replace(/<sup>(\d+)<\/sup>/g, '$1 ').replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim() : '')).join('\n') : ''}`).join('\n\n');
+}
+ACT.sercopy = async (el, e, d) => toast((await copyText(sermonText(sd(d), d.ctx.texts))) ? 'Scaletta copiata' : 'Impossibile copiare');
+ACT.sershare = (el, e, d) => shareText(sermonText(sd(d), d.ctx.texts), sd(d).title);
+/* chiede un riferimento scritto a mano */
+function askRef(cb) {
+  openLayer('sheet', () => `<h2 class="t">Aggiungi versetto</h2><input type="text" id="askr" placeholder="Es. Gv 3:16-18 oppure Salmi 23" autocomplete="off"><div class="mut" id="askm" style="margin-top:6px"></div><div class="row" style="margin-top:12px"><button class="btn" data-act="askok">${ic('check')} Aggiungi</button><button class="btn sec" data-act="close">Annulla</button></div>`, { ctx: { cb } });
+  const d = layers[layers.length - 1], i = $('#askr', d); i.focus();
+  i.oninput = () => { const r = parseRef(i.value); $('#askm', d).textContent = r ? '→ ' + refLabel(r) : (i.value ? 'Riferimento non riconosciuto' : ''); };
+  i.onkeydown = e => { if (e.key === 'Enter') ACT.askok(null, null, d); };
+}
+ACT.askok = (el, e, d) => { const r = parseRef($('#askr', d).value); if (!r) return toast('Riferimento non riconosciuto'); const cb = d.ctx.cb; closeTop(); setTimeout(() => cb(r), 50); };
+
+/* dal testo al sermone */
+ACT.tosermon = () => {
+  const refs = selRefs();
+  openLayer('sheet', d => {
+    const c = d.ctx;
+    if (c.step === 'point') { const s = SER(c.sid); return `<h2 class="t">Aggiungi a «${esc(s.title)}»</h2><div class="mut" style="margin-bottom:8px">${esc(c.refs.map(refLabel).join(' · '))}</div><div class="sr" data-act="topt" data-pid=""><b>${ic('plus')} Nuovo punto</b></div>${s.points.map((p, i) => `<div class="sr" data-act="topt" data-pid="${p.id}"><b>Punto ${i + 1}</b> <span class="mut">${esc((p.text || (p.verses[0] ? refLabel(p.verses[0]) : '')).slice(0, 60))}</span></div>`).join('')}<div class="row" style="margin-top:12px"><button class="btn sec sm" data-act="tosback">${ic('left')} Altro sermone</button></div>`; }
+    const list = [...D.sermons].sort((a, b) => b.updated - a.updated);
+    return `<h2 class="t">Trasferisci nel sermone</h2><div class="mut" style="margin-bottom:8px">${esc(c.refs.map(refLabel).join(' · '))}</div>${list.map(s => `<div class="sr" data-act="tosser" data-id="${s.id}"><b>${esc(s.title)}</b> <span class="mut">· ${s.points.length} punti</span></div>`).join('')}<label class="l">Oppure crea un nuovo sermone</label><div class="row"><input type="text" id="tsnew" placeholder="Titolo del sermone"><button class="btn" data-act="tosnew">${ic('plus')}</button></div>`;
+  }, { ctx: { refs, step: 'sermon' } });
+};
+ACT.tosser = (el, e, d) => { d.ctx.step = 'point'; d.ctx.sid = el.dataset.id; refreshLayer(d); };
+ACT.tosback = (el, e, d) => { d.ctx.step = 'sermon'; refreshLayer(d); };
+ACT.tosnew = (el, e, d) => { const s = newSermon($('#tsnew', d).value.trim()); d.ctx.sid = s.id; d.ctx.step = 'point'; refreshLayer(d); };
+ACT.topt = (el, e, d) => {
+  const s = SER(d.ctx.sid), pid = el.dataset.pid; let p;
+  if (pid) p = s.points.find(x => x.id === pid); else { p = { id: uid(), text: '', verses: [] }; s.points.push(p); }
+  d.ctx.refs.forEach(r => { if (!p.verses.some(x => JSON.stringify(x) === JSON.stringify(r))) p.verses.push(r); });
+  touchS(s); const n = s.points.indexOf(p) + 1, t = s.title;
+  closeTop(); clearSel(); renderSermons(); toast(`Aggiunto a «${t}» · punto ${n}`);
+};
+/* ============ commentari ============ */
+const CM = id => C.list.find(c => c.id === id);
+function commentsFor(bk, ch, vs) {
+  const out = [];
+  C.list.forEach(c => c.entries.forEach(e => {
+    const hit = e.refs.filter(r => r.bk === bk && vs.some(v => refHas(r, ch, v)));
+    if (hit.length) out.push({ c, e, span: Math.min(...hit.map(refSpan)), hit: hit[0] });
+  }));
+  return out.sort((a, b) => a.span - b.span);
+}
+function linkRefs(html) {
+  return html.replace(/([1-3]?\s?[A-ZÀ-Ý][a-zà-ÿ]{1,14}\.?)\s?(\d{1,3})(?:\s?[:,]\s?(\d{1,3})(?:\s?[-–]\s?(?:\d{1,3}\s?[:,]\s?)?\d{1,3})?)?/g, (m, b) => {
+    if (bookIdx(b) < 0) return m; const r = parseRef(m.replace(/&#39;/g, "'")); if (!r) return m;
+    return `<a class="ref" data-act="refgo" data-r="${r.bk},${r.c1},${r.v1},${r.c2},${r.v2}">${m}</a>`;
+  });
+}
+function bodyHTML(t) {
+  return String(t || '').split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).map(p => {
+    let h = esc(p).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<i>$2</i>').replace(/\n/g, '<br>');
+    if (/^#{1,4}\s/.test(p)) return `<h4>${linkRefs(esc(p.replace(/^#{1,4}\s*/, '')))}</h4>`;
+    return `<p>${linkRefs(h)}</p>`;
+  }).join('');
+}
+ACT.refgo = el => { const [bk, c1, v1, , v2] = el.dataset.r.split(',').map(Number); goto(bk, c1, v1 === 1 && v2 === 999 ? 0 : v1); };
+const snippet = (t, n = 140) => String(t || '').replace(/[#*]/g, '').replace(/\s+/g, ' ').trim().slice(0, n);
+
+function detectHeading(line, def, cur) {
+  let t = line.trim(); if (!t || t.length > 110) return null;
+  const md = /^#{1,6}\s*/.test(t); t = t.replace(/^#{1,6}\s*/, '').replace(/^\*{1,2}|\*{1,2}$/g, '').trim();
+  let p = parseRefPrefix(t);
+  if (!p && def >= 0) {
+    let m, t2 = null;
+    if ((m = /^(?:cap(?:itolo)?\.?\s*)?(\d{1,3}\s*[:,.]\s*\d{1,3}.*)$/i.exec(t))) t2 = `${BOOKS[def].n} ${m[1]}`;
+    else if ((m = /^cap(?:itolo)?\.?\s*(\d{1,3}.*)$/i.exec(t))) t2 = `${BOOKS[def].n} ${m[1]}`;
+    else if (cur && (m = /^vers(?:etto|etti|\.)?\s*(\d{1,3}.*)$/i.exec(t))) t2 = `${BOOKS[def].n} ${cur}:${m[1]}`;
+    if (t2) p = parseRefPrefix(t2);
+  }
+  if (!p) return null;
+  let rest = p.rest.trim();
+  if (rest && !md && !/^[-–—:|(]/.test(rest)) return null;
+  rest = rest.replace(/^[-–—:|]\s*/, '').replace(/^\((.*)\)$/, '$1').trim();
+  if (!md && rest.length > 80) return null;
+  return { ref: p.ref, title: rest };
+}
+function htmlToText(h) {
+  const doc = new DOMParser().parseFromString(h, 'text/html');
+  doc.querySelectorAll('script,style').forEach(x => x.remove());
+  doc.querySelectorAll('br').forEach(b => b.replaceWith('\n'));
+  doc.querySelectorAll('h1,h2,h3,h4,h5,h6,p,div,li,tr').forEach(b => b.append('\n\n'));
+  return doc.body.textContent;
+}
+function buildEntries(text, def) {
+  const tt = text.trim();
+  if (tt[0] === '{') {
     try {
-      const value = JSON.parse(localStorage.getItem(key) || "[]");
-      return Array.isArray(value) ? value : [];
-    } catch (e) { return []; }
+      const j = JSON.parse(tt);
+      if (Array.isArray(j.entries)) return { title: j.title, author: j.author, entries: j.entries.map(e => ({ id: uid(), title: e.title || '', body: e.text || e.body || '', refs: String(e.ref || e.refs || '').split(/[;|]/).map(s => parseRef(s.trim())).filter(Boolean) })) };
+    } catch (e) {}
   }
-  const data = { notes: load(KEYS.notes), sermons: load(KEYS.sermons), comments: load(KEYS.comments) };
-  function save(kind) {
-    try { localStorage.setItem(KEYS[kind], JSON.stringify(data[kind])); return true; }
-    catch (e) { toast("Salvataggio non riuscito: memoria del dispositivo piena o non disponibile."); return false; }
+  const lines = tt.replace(/\r/g, '').split('\n'), entries = []; let cur = null, loose = [], ch = 0;
+  for (const ln of lines) {
+    const h = detectHeading(ln, def, ch);
+    if (h) { ch = h.ref.c1; cur = { id: uid(), title: h.title, refs: [h.ref], body: [] }; entries.push(cur); }
+    else if (cur) cur.body.push(ln); else loose.push(ln);
   }
-  const today = () => new Date().toLocaleDateString("it-IT");
-  const esc = s => String(s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-
-  /* ---------- Schede ---------- */
-  function showTab(name) {
-    document.querySelectorAll(".nav").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
-    document.querySelectorAll(".page").forEach(p => p.classList.toggle("show", p.id === name));
-    const active = document.querySelector(".nav.active");
-    if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest", inline: "center" });
-    render();
+  entries.forEach(e => e.body = e.body.join('\n').trim());
+  if (loose.join('').trim()) entries.unshift({ id: uid(), title: entries.length ? 'Introduzione' : '', refs: [], body: loose.join('\n').trim() });
+  return { entries };
+}
+function renderComm() {
+  const q = (C.q || '');
+  $('#v-com').innerHTML = `<div class="vh"><h1>Commentari</h1></div><div class="pad" style="padding-bottom:0"><input type="search" id="cq" value="${esc(q)}" placeholder="Cerca per versetto (Gv 3:16) o parola…" autocomplete="off"></div><div id="cres"></div>`;
+  const i = $('#cq'); i.oninput = () => { C.q = i.value; commRes(); }; commRes();
+}
+function commRes() {
+  const box = $('#cres'), q = (C.q || '').trim(); let h = '';
+  if (q) {
+    const r = parseRef(q); let res = [];
+    if (r) { for (const c of C.list) for (const e of c.entries) { const hit = e.refs.filter(x => x.bk === r.bk && x.c1 <= r.c2 && x.c2 >= r.c1 && (r.c1 !== r.c2 || P(x.c2, x.v2) >= P(r.c1, r.v1) && P(x.c1, x.v1) <= P(r.c2, r.v2))); if (hit.length) res.push({ c, e, span: Math.min(...hit.map(refSpan)) }); } res.sort((a, b) => a.span - b.span); }
+    else { const n = norm(q); for (const c of C.list) for (const e of c.entries) if (norm(e.title + ' ' + e.body).includes(n)) res.push({ c, e }); res = res.slice(0, 60); }
+    h = `<div class="mut" style="padding:10px 16px 0">${res.length} risultat${res.length === 1 ? 'o' : 'i'}${r ? ' per ' + esc(refLabel(r)) : ''}</div>` + res.map(x => entryCard(x.c, x.e)).join('');
+  } else {
+    h = C.list.length ? C.list.map(c => `<div class="card tap" data-act="comopen" data-id="${c.id}"><h3>${esc(c.title)}</h3><div class="mut">${c.author ? esc(c.author) + ' · ' : ''}${c.entries.length} sezion${c.entries.length === 1 ? 'e' : 'i'}${c.entries.some(e => !e.refs.length) ? ' · ' + c.entries.filter(e => !e.refs.length).length + ' da associare' : ''}</div></div>`).join('') : `<div class="empty"><h2>Nessun commentario</h2>Aggiungi un commentario (testo incollato o file): le sezioni che iniziano con un riferimento, per esempio «Giovanni 3:16-21», si collegano da sole ai versetti. Poi, nel testo, tocca un versetto e «Commentario».</div>`;
   }
-  document.querySelectorAll(".nav").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+  box.innerHTML = h + (q ? '' : `<button class="btn fab" data-act="comadd">${ic('plus')} Aggiungi commentario</button>`);
+}
+const entryCard = (c, e) => `<div class="card tap" data-act="entopen" data-cid="${c.id}" data-eid="${e.id}"><div class="row w"><span class="ref">${e.refs.length ? esc(e.refs.map(refLabel).join(' · ')) : '<span class="badge">da associare</span>'}</span><span class="mut">${esc(c.title)}</span></div>${e.title ? `<div style="font-weight:650;margin-top:3px">${esc(e.title)}</div>` : ''}<div class="clamp mut" style="margin-top:3px">${esc(snippet(e.body))}</div></div>`;
+ACT.comopen = el => openCommentary(el.dataset.id);
+function openCommentary(cid) {
+  openLayer('page', d => {
+    const c = CM(cid); if (!c) return '<div class="empty">Non trovato</div>';
+    const f = norm(d.ctx.f || '');
+    const es = c.entries.filter(e => !f || norm(e.title + ' ' + e.body + ' ' + e.refs.map(refLabel).join(' ')).includes(f));
+    return `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>${esc(c.title)}</h2></div>
+    <div class="chips"><button class="chip" data-act="entnew" data-cid="${cid}">${ic('plus')} Sezione</button><button class="chip" data-act="cominfo">${ic('pen')} Titolo / autore</button><button class="chip" data-act="comdel">${ic('trash')} Elimina</button></div>
+    <div class="pad" style="padding-top:0"><input type="search" id="cf" value="${esc(d.ctx.f || '')}" placeholder="Filtra le sezioni…"></div>${es.map(e => entryCard(c, e)).join('') || '<div class="empty">Nessuna sezione</div>'}`;
+  }, { ctx: { cid, f: '' } });
+  const d = layers[layers.length - 1];
+  d.mount = d => { const i = $('#cf', d); if (!i) return; i.oninput = () => { d.ctx.f = i.value; const pos = i.selectionStart; refreshLayer(d); const n = $('#cf', d); n.focus(); n.setSelectionRange(pos, pos); }; };
+  d.mount(d);
+}
+ACT.cominfo = (el, e, d) => { const c = CM(d.ctx.cid); openLayer('sheet', () => `<h2 class="t">Commentario</h2><label class="l">Titolo</label><input type="text" id="cit" value="${esc(c.title)}"><label class="l">Autore</label><input type="text" id="cia" value="${esc(c.author || '')}"><div class="row" style="margin-top:14px"><button class="btn" data-act="cinsave">${ic('check')} Salva</button><button class="btn sec" data-act="close">Annulla</button></div>`, { ctx: { cid: d.ctx.cid } }); };
+ACT.cinsave = (el, e, d) => { const c = CM(d.ctx.cid); c.title = $('#cit', d).value.trim() || c.title; c.author = $('#cia', d).value.trim(); saveC(); closeTop(); refreshTop(); renderComm(); };
+ACT.comdel = (el, e, d) => { const c = CM(d.ctx.cid); if (!confirmed(el, 'Sicuro?')) return; C.list = C.list.filter(x => x !== c); saveC(); closeTop(); renderComm(); };
 
-  /* ---------- Bibbia: lettura, selezione, sottolineature e appunti ---------- */
-  const DEMO = { book: "Genesi", chapter: "1" };     // unico capitolo presente nel prototipo
-  const currentRef = () => $("book").value + " " + $("chapter").value;
-  let picked = null;                                  // ultima selezione fatta nel testo: { text, ref }
+/* importazione */
+ACT.comadd = () => {
+  openLayer('sheet', () => `<h2 class="t">Aggiungi un commentario</h2>
+  <label class="l">Titolo</label><input type="text" id="cmt" placeholder="Es. Commentario a Giovanni">
+  <label class="l">Autore (facoltativo)</label><input type="text" id="cma">
+  <label class="l">Libro (solo se le sezioni indicano soltanto «3:16-21» o «Capitolo 3»)</label>
+  <select id="cmb"><option value="-1">— nessuno: i riferimenti contengono il nome del libro —</option>${BOOKS.map((b, i) => `<option value="${i}">${esc(b.n)}</option>`).join('')}</select>
+  <label class="l">Testo</label><textarea id="cmx" placeholder="Incolla qui il commentario. Ogni sezione deve iniziare con un titolo che contiene il riferimento, per esempio:&#10;&#10;Giovanni 3:1-15 — Nicodemo&#10;testo del commento…&#10;&#10;Giovanni 3:16-21&#10;…"></textarea>
+  <div class="row w" style="margin-top:8px"><button class="btn sec sm" data-act="cmfile">${ic('up2')} Da file (.txt .md .html .json)</button></div>
+  <div class="hint" id="cmprev" style="margin-top:10px">Nessun testo</div>
+  <div class="row" style="margin-top:12px"><button class="btn" data-act="cmsave">${ic('check')} Aggiungi</button><button class="btn sec" data-act="close">Annulla</button></div>`);
+  const d = layers[layers.length - 1], upd = () => {
+    const tx = $('#cmx', d).value; if (!tx.trim()) return $('#cmprev', d).textContent = 'Nessun testo';
+    const r = buildEntries(tx, +$('#cmb', d).value), n = r.entries.filter(e => e.refs.length).length, un = r.entries.length - n;
+    $('#cmprev', d).innerHTML = n ? `<b>${n}</b> sezion${n === 1 ? 'e riconosciuta' : 'i riconosciute'} e collegat${n === 1 ? 'a' : 'e'} ai versetti${un ? `, ${un} senza riferimento` : ''}.<br><span class="mut">${esc(r.entries.filter(e => e.refs.length).slice(0, 4).map(e => refLabel(e.refs[0])).join(' · '))}${n > 4 ? ' …' : ''}</span>` : 'Nessun riferimento riconosciuto: creo un’unica sezione che potrai associare ai versetti a mano.';
+  };
+  d.upd = upd; $('#cmx', d).oninput = upd; $('#cmb', d).onchange = upd;
+};
+ACT.cmfile = async (el, e, d) => {
+  const f = await pickFile('.txt,.md,.html,.htm,.json,text/plain,text/html,application/json'); if (!f) return;
+  let t = f.text; if (/\.html?$/i.test(f.name) || /<\/(p|div|h\d)>/i.test(t.slice(0, 3000))) t = htmlToText(t);
+  $('#cmx', d).value = t; if (!$('#cmt', d).value) $('#cmt', d).value = f.name.replace(/\.[^.]+$/, ''); d.upd();
+};
+ACT.cmsave = (el, e, d) => {
+  const tx = $('#cmx', d).value; if (!tx.trim()) return toast('Incolla o carica un testo');
+  const r = buildEntries(tx, +$('#cmb', d).value); let entries = r.entries;
+  if (!entries.some(x => x.refs.length) && entries.length <= 1) entries = [{ id: uid(), title: '', refs: [], body: tx.trim() }];
+  const title = $('#cmt', d).value.trim() || r.title || 'Commentario senza titolo';
+  C.list.push({ id: uid(), title, author: $('#cma', d).value.trim() || r.author || '', entries });
+  saveC(); closeTop(); renderComm(); toast(`«${title}» aggiunto · ${entries.filter(x => x.refs.length).length} sezioni collegate`);
+};
 
-  function updateReading() {
-    const hasText = $("book").value === DEMO.book && $("chapter").value === DEMO.chapter;
-    $("lblBook").textContent = $("book").value.toUpperCase();
-    $("lblChapter").textContent = $("chapter").value;
-    $("verses").hidden = !hasText;
-    $("sampleTag").hidden = !hasText;
-    $("readingHint").hidden = !hasText;
-    $("noText").hidden = hasText;
-    $("noText").textContent = "Il testo di " + currentRef() + " non è ancora incluso in questo prototipo.";
-    $("addMark").disabled = !hasText;
-    $("picked").hidden = !hasText;
-    clearPicked();
-  }
-  $("book").addEventListener("change", updateReading);
-  $("chapter").addEventListener("change", updateReading);
+/* sezione (lettura / modifica / associazione) */
+ACT.entopen = el => openEntry(el.dataset.cid, el.dataset.eid);
+function openEntry(cid, eid, editing, isNew) {
+  openLayer('page', d => {
+    const c = CM(d.ctx.cid), e = c && c.entries.find(x => x.id === d.ctx.eid); if (!e) return '<div class="empty">Non trovato</div>';
+    const head = `<div class="pg-head"><button class="ib" data-act="entback">${ic('back')}</button><h2>${esc(e.title || (e.refs[0] ? refLabel(e.refs[0]) : 'Sezione'))}</h2></div>`;
+    const chips = `<div class="pad" style="padding-bottom:0"><div class="mut" style="margin-bottom:4px">${esc(c.title)} · versetti associati</div>${e.refs.map((r, j) => `<span class="vchip"><span data-act="vgo" data-bk="${r.bk}" data-c="${r.c1}" data-v="${r.v1 === 1 && r.v2 === 999 ? 0 : r.v1}">${esc(refLabel(r))}</span><button data-act="entunlink" data-j="${j}" aria-label="Rimuovi">${ic('x')}</button></span>`).join('') || '<span class="badge">nessuno</span> '}<button class="btn sec sm" data-act="entlink">${ic('link')} Associa versetti</button></div>`;
+    if (d.ctx.editing) return head + chips + `<div class="pad"><label class="l">Titolo della sezione</label><input type="text" id="etit" value="${esc(e.title)}"><label class="l">Testo</label><textarea id="ebody" style="min-height:300px">${esc(e.body)}</textarea><div class="row" style="margin-top:12px"><button class="btn" data-act="entsave">${ic('check')} Salva</button><button class="btn sec" data-act="entcancel">Annulla</button></div></div>`;
+    const r0 = e.refs[0], bt = r0 && BIBLE ? `<details class="card" ${d.ctx.openText ? 'open' : ''}><summary style="font-weight:650;cursor:pointer">Testo biblico · ${esc(refLabel(r0))}</summary><div class="vquote" style="margin-top:8px">${vquote(r0.v2 - r0.v1 > 25 || r0.c2 !== r0.c1 ? { ...r0, c2: r0.c1, v2: Math.min(r0.v2, r0.v1 + 25) } : r0)}</div></details>` : '';
+    return head + chips + bt + `<div class="pad body">${bodyHTML(e.body) || '<p class="mut">Sezione vuota.</p>'}</div><div class="pad row w"><button class="btn sec" data-act="entedit">${ic('pen')} Modifica</button><button class="btn sec" data-act="entdel">${ic('trash')} Elimina sezione</button></div>`;
+  }, { ctx: { cid, eid, editing: !!editing, isNew: !!isNew, openText: true } });
+}
+const ENT = d => CM(d.ctx.cid).entries.find(x => x.id === d.ctx.eid);
+ACT.entback = (el, e, d) => { if (d.ctx.isNew && !ENT(d).body) { const c = CM(d.ctx.cid); c.entries = c.entries.filter(x => x.id !== d.ctx.eid); saveC(); } closeTop(); };
+ACT.entedit = (el, e, d) => { d.ctx.editing = true; refreshLayer(d); };
+ACT.entcancel = (el, e, d) => { if (d.ctx.isNew && !ENT(d).body) return ACT.entback(el, e, d); d.ctx.editing = false; refreshLayer(d); };
+ACT.entsave = (el, e, d) => { const en = ENT(d); en.title = $('#etit', d).value.trim(); en.body = $('#ebody', d).value.trim(); d.ctx.isNew = false; d.ctx.editing = false; saveC(); refreshLayer(d); };
+ACT.entdel = (el, e, d) => { if (!confirmed(el, 'Sicuro?')) return; const c = CM(d.ctx.cid); c.entries = c.entries.filter(x => x.id !== d.ctx.eid); saveC(); closeTop(); setTimeout(() => { refreshTop(); renderComm(); }, 80); };
+ACT.entunlink = (el, e, d) => { ENT(d).refs.splice(+el.dataset.j, 1); saveC(); refreshLayer(d); };
+ACT.entlink = (el, e, d) => {
+  const hasSel = S.sel && S.tab === 'read';
+  openLayer('sheet', () => `<h2 class="t">Associa versetti a questa sezione</h2>${hasSel ? `<button class="btn block" data-act="entusesel" style="margin-bottom:12px">${ic('check')} Usa la selezione: ${esc(selRefs().map(refLabel).join(' · '))}</button>` : ''}<label class="l">Scrivi il riferimento</label><input type="text" id="lnk" placeholder="Es. Gv 3:16-21" autocomplete="off"><div class="mut" id="lnkm" style="margin-top:6px"></div><div class="row" style="margin-top:12px"><button class="btn" data-act="lnkok">${ic('check')} Associa</button><button class="btn sec" data-act="close">Annulla</button></div>`, { ctx: { parent: d } });
+  const l = layers[layers.length - 1], i = $('#lnk', l); i.focus();
+  i.oninput = () => { const r = parseRef(i.value); $('#lnkm', l).textContent = r ? '→ ' + refLabel(r) : (i.value ? 'Riferimento non riconosciuto' : ''); };
+  i.onkeydown = e => { if (e.key === 'Enter') ACT.lnkok(null, null, l); };
+};
+function addLinks(entry, refs) { refs.forEach(r => { if (!entry.refs.some(x => JSON.stringify(x) === JSON.stringify(r))) entry.refs.push(r); }); saveC(); }
+ACT.entusesel = (el, e, d) => { const p = d.ctx.parent; addLinks(ENT(p), selRefs()); closeTop(); refreshTop(); toast('Versetti associati'); };
+ACT.lnkok = (el, e, d) => { const r = parseRef($('#lnk', d).value); if (!r) return toast('Riferimento non riconosciuto'); const p = d.ctx.parent; addLinks(ENT(p), [r]); closeTop(); refreshTop(); toast('Versetti associati'); };
+ACT.entnew = (el, e, d) => { const c = CM(el.dataset.cid), en = { id: uid(), title: '', body: '', refs: [] }; c.entries.push(en); saveC(); openEntry(c.id, en.id, true, true); };
 
-  /* Legge la selezione corrente: testo pulito (senza numeri di versetto) e versetti toccati. */
-  function readSelection() {
-    const sel = window.getSelection();
-    if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
-    const range = sel.getRangeAt(0);
-    const parts = [], nums = [];
-    document.querySelectorAll("#verses .vt").forEach(span => {
-      const whole = document.createRange();
-      whole.selectNodeContents(span);
-      if (range.compareBoundaryPoints(Range.END_TO_START, whole) >= 0) return;   // inizia dopo questo versetto
-      if (range.compareBoundaryPoints(Range.START_TO_END, whole) <= 0) return;   // finisce prima di questo versetto
-      const part = document.createRange();
-      if (range.compareBoundaryPoints(Range.START_TO_START, whole) > 0) part.setStart(range.startContainer, range.startOffset);
-      else part.setStart(whole.startContainer, whole.startOffset);
-      if (range.compareBoundaryPoints(Range.END_TO_END, whole) < 0) part.setEnd(range.endContainer, range.endOffset);
-      else part.setEnd(whole.endContainer, whole.endOffset);
-      const text = part.toString().replace(/\s+/g, " ").trim();
-      if (text) { parts.push(text); nums.push(Number(span.parentElement.dataset.v)); }
+/* dal versetto al commentario */
+ACT.comments = () => {
+  const refs = selRefs(), vs = [...S.sel.verses], bk = S.bk, ch = S.ch;
+  openLayer('page', d => {
+    const res = commentsFor(bk, ch, vs);
+    return `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>Commentari · ${esc(refs.map(refLabel).join(' · '))}</h2></div>
+    ${res.length ? res.map(x => entryCard(x.c, x.e)).join('') : `<div class="empty"><h2>Nessun commentario associato</h2>Nessuna sezione dei tuoi commentari tratta questi versetti.</div>`}
+    <div class="pad"><div style="display:grid;gap:10px"><button class="btn sec" data-act="cpick">${ic('link')} Associa una sezione esistente</button><button class="btn sec" data-act="cmine">${ic('pen')} Scrivi un mio commento qui</button></div></div>`;
+  }, { ctx: { refs } });
+};
+ACT.cmine = (el, e, d) => {
+  let c = C.list.find(x => x.id === 'mine'); if (!c) { c = { id: 'mine', title: 'I miei commenti', author: '', entries: [] }; C.list.push(c); }
+  const en = { id: uid(), title: '', body: '', refs: d.ctx.refs.map(r => ({ ...r })) }; c.entries.push(en); saveC(); renderComm(); openEntry('mine', en.id, true, true);
+};
+ACT.cpick = (el, e, d) => {
+  openLayer('page', l => {
+    const c = l.ctx;
+    if (!c.cid) return `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>Scegli il commentario</h2></div>${C.list.map(x => `<div class="card tap" data-act="cpickc" data-id="${x.id}"><h3>${esc(x.title)}</h3><div class="mut">${x.entries.length} sezioni</div></div>`).join('') || '<div class="empty">Nessun commentario: aggiungine uno dalla scheda Commentari.</div>'}`;
+    const cm = CM(c.cid), f = norm(c.f || '');
+    const es = cm.entries.filter(e => !f || norm(e.title + ' ' + e.body + ' ' + e.refs.map(refLabel).join(' ')).includes(f));
+    return `<div class="pg-head"><button class="ib" data-act="cpickback">${ic('back')}</button><h2>${esc(cm.title)}</h2></div><div class="pad"><input type="search" id="cpf" value="${esc(c.f || '')}" placeholder="Filtra le sezioni…"><div class="mut" style="margin-top:6px">Tocca la sezione da associare a ${esc(c.refs.map(refLabel).join(' · '))}</div></div>${es.slice(0, 80).map(e => `<div class="card tap" data-act="cpicke" data-eid="${e.id}"><div class="row w"><span class="ref">${e.refs.length ? esc(e.refs.map(refLabel).join(' · ')) : '<span class="badge">da associare</span>'}</span></div>${e.title ? `<div style="font-weight:650">${esc(e.title)}</div>` : ''}<div class="clamp mut">${esc(snippet(e.body))}</div></div>`).join('')}`;
+  }, { ctx: { refs: d.ctx.refs, cid: null, f: '' } });
+  const l = layers[layers.length - 1];
+  l.mount = l => { const i = $('#cpf', l); if (i) i.oninput = () => { l.ctx.f = i.value; const p = i.selectionStart; refreshLayer(l); const n = $('#cpf', l); n.focus(); n.setSelectionRange(p, p); }; };
+  l.mount(l);
+};
+ACT.cpickc = (el, e, d) => { d.ctx.cid = el.dataset.id; d.ctx.f = ''; refreshLayer(d); };
+ACT.cpickback = (el, e, d) => { d.ctx.cid = null; refreshLayer(d); };
+ACT.cpicke = (el, e, d) => { const en = CM(d.ctx.cid).entries.find(x => x.id === el.dataset.eid); addLinks(en, d.ctx.refs); closeTop(); setTimeout(refreshTop, 80); toast('Sezione associata ai versetti'); };
+
+
+/* importa (senza cancellare) i dati del prototipo salvati in localStorage: lp_sermons, lp_notes */
+function migrateLegacy() {
+  if (D.settings.legacyDone) return; D.settings.legacyDone = true;
+  let ns = 0, nn = 0;
+  try {
+    const ser = JSON.parse(localStorage.getItem('lp_sermons') || '[]');
+    const L = [['intro', 'Introduzione'], ['context', 'Contesto'], ['theme', 'Tema centrale'], ['points', 'Punti principali'], ['apply', 'Applicazioni'], ['end', 'Conclusione']];
+    if (Array.isArray(ser)) ser.forEach(o => {
+      if (!o || typeof o !== 'object') return;
+      const pts = L.filter(([k]) => String(o[k] || '').trim()).map(([k, l]) => ({ id: uid(), text: l + '\n' + String(o[k]).trim(), verses: [] }));
+      const r = o.ref ? parseRef(String(o.ref)) : null;
+      if (r) { if (!pts.length) pts.push({ id: uid(), text: '', verses: [] }); pts[0].verses.push(r); }
+      D.sermons.push({ id: uid(), title: String(o.title || 'Predicazione'), created: Date.now(), updated: Date.now(), points: pts }); ns++;
     });
-    if (!parts.length) return null;
-    const first = nums[0], last = nums[nums.length - 1];
-    return { text: parts.join(" "), ref: currentRef() + ":" + first + (last > first ? "-" + last : "") };
-  }
-  /* Sul telefono il tocco su un pulsante annulla la selezione: per questo l'ultima
-     selezione valida resta memorizzata (e visibile) finché non viene usata o annullata. */
-  document.addEventListener("selectionchange", () => {
-    if ($("verses").hidden) return;
-    let found = null;
-    try { found = readSelection(); } catch (e) {}
-    if (found) { picked = found; showPicked(); }
-  });
-  function showPicked() {
-    $("picked").classList.toggle("empty", !picked);
-    $("pickedRef").textContent = picked ? picked.ref : "Selezione";
-    $("pickedText").textContent = picked ? "«" + picked.text + "»" : "Nessun testo selezionato";
-  }
-  function clearPicked() {
-    picked = null;
-    showPicked();
-    const sel = window.getSelection();
-    if (sel && !sel.isCollapsed && $("verses").contains(sel.anchorNode)) sel.removeAllRanges();
-  }
-  $("clearPicked").addEventListener("click", clearPicked);
+  } catch (e) {}
+  try {
+    const nt = JSON.parse(localStorage.getItem('lp_notes') || '[]');
+    if (Array.isArray(nt)) nt.forEach(o => {
+      if (!o || o.type === 'Sottolineatura') return;
+      const r = parseRef(String(o.ref || '')), text = String(o.text || '').trim(); if (!r || !text || r.c1 !== r.c2) return;
+      D.notes.push({ id: uid(), bk: r.bk, ch: r.c1, v1: r.v1, v2: r.v2 === 999 ? r.v1 : r.v2, text, ts: Date.now() }); nn++;
+    });
+  } catch (e) {}
+  save();
+  if (ns + nn) setTimeout(() => toast(`Importati dal vecchio prototipo: ${ns} predicazioni, ${nn} appunti`), 800);
+}
+if ('serviceWorker' in navigator && location.protocol !== 'file:') addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {}));
 
-  $("addMark").addEventListener("click", () => {
-    if (!picked) { toast("Seleziona prima una parola o una frase nel testo."); return; }
-    data.notes.unshift({ type: "Sottolineatura", ref: picked.ref, text: picked.text, comment: "", date: today() });
-    if (!save("notes")) { data.notes.shift(); return; }
-    toast("Sottolineatura salvata: " + picked.ref);
-    clearPicked();
-    render();
-  });
-  $("saveVerseNote").addEventListener("click", () => {
-    const text = $("verseNote").value.trim();
-    if (!text) { toast("Scrivi prima un appunto."); return; }
-    const note = { type: "Appunto", ref: picked ? picked.ref : currentRef(), text: text, comment: "", date: today() };
-    if (picked) note.quote = picked.text;
-    data.notes.unshift(note);
-    if (!save("notes")) { data.notes.shift(); return; }
-    $("verseNote").value = "";
-    toast("Appunto salvato: " + note.ref);
-    clearPicked();
-    render();
-  });
-
-  /* ---------- Commentari ---------- */
-  $("saveComment").addEventListener("click", () => {
-    const title = $("commentTitle").value.trim(), file = $("commentFile").files[0];
-    if (!title && !file) { toast("Inserisci un titolo o scegli un file."); return; }
-    data.comments.unshift({ title: title || file.name, ref: $("commentRef").value.trim(), file: file ? file.name : "", date: today() });
-    if (!save("comments")) { data.comments.shift(); return; }
-    $("commentTitle").value = ""; $("commentRef").value = ""; $("commentFile").value = "";
-    render();
-    toast(file ? "Voce aggiunta. Del file è stato registrato solo il nome." : "Voce aggiunta.");
-  });
-
-  /* ---------- Predicazioni ---------- */
-  const FIELDS = { title: "sermonTitle", ref: "sermonRef", intro: "sIntro", context: "sContext", theme: "sTheme", points: "sPoints", apply: "sApply", end: "sEnd" };
-  const HINTS_FREE = { sIntro: "Introduzione...", sContext: "Contesto...", sTheme: "Qual è il messaggio principale?", sPoints: "1. ...\n2. ...\n3. ...", sApply: "Esempi e applicazioni pratiche...", sEnd: "Conclusione..." };
-  const HINTS_GUIDED = { sIntro: "1. Introduzione e aggancio", sContext: "2. Contesto storico e biblico", sTheme: "3. Tema centrale", sPoints: "4. Punti principali e sottopunti", sApply: "5. Illustrazioni e applicazioni", sEnd: "6. Conclusione e appello" };
-  let editing = null;        // posizione, nell'elenco, della predicazione aperta in modifica
-  let cleanForm = "";        // contenuto dell'editor all'ultimo salvataggio o apertura
-
-  function readForm() {
-    const d = {};
-    for (const k in FIELDS) d[k] = $(FIELDS[k]).value;
-    return d;
-  }
-  function fillForm(s) {
-    for (const k in FIELDS) $(FIELDS[k]).value = (s && s[k]) || "";
-    cleanForm = JSON.stringify(readForm());
-  }
-  const formChanged = () => JSON.stringify(readForm()) !== cleanForm;
-  function setHints(hints) { for (const id in hints) $(id).placeholder = hints[id]; }
-  function setEditing(i) {
-    editing = i;
-    $("editState").hidden = i === null;
-    if (i !== null) $("editState").textContent = "In modifica: " + (data.sermons[i].title || "senza titolo");
-    $("saveSermon").textContent = i === null ? "Salva predicazione" : "Salva modifiche";
-  }
-  function newSermon(btn, guided) {
-    if (formChanged() && !confirmed(btn, "Scartare il testo non salvato?")) return;
-    fillForm(guided ? { title: "Nuova predicazione" } : null);
-    setHints(guided ? HINTS_GUIDED : HINTS_FREE);
-    setEditing(null);
-    $("sermonTitle").focus();
-  }
-  $("newFree").addEventListener("click", e => newSermon(e.currentTarget, false));
-  $("newGuided").addEventListener("click", e => newSermon(e.currentTarget, true));
-
-  $("saveSermon").addEventListener("click", () => {
-    const d = readForm();
-    if (!d.title.trim()) { toast("Inserisci il titolo della predicazione."); $("sermonTitle").focus(); return; }
-    d.date = today();
-    const before = data.sermons.slice();
-    if (editing !== null && data.sermons[editing]) data.sermons[editing] = d;
-    else data.sermons.unshift(d);
-    if (!save("sermons")) { data.sermons = before; return; }     // il testo resta nell'editor
-    fillForm(null);
-    setEditing(null);
-    render();
-    toast("Predicazione salvata.");
-  });
-
-  function sermonText(s) {
-    return (s.title || "") + "\nRiferimento: " + (s.ref || "") +
-      "\n\nINTRODUZIONE\n" + (s.intro || "") + "\n\nCONTESTO\n" + (s.context || "") +
-      "\n\nTEMA CENTRALE\n" + (s.theme || "") + "\n\nPUNTI PRINCIPALI\n" + (s.points || "") +
-      "\n\nAPPLICAZIONI\n" + (s.apply || "") + "\n\nCONCLUSIONE\n" + (s.end || "") + "\n";
-  }
-  function download(name, text) {
-    const safe = String(name || "").replace(/[^\p{L}\p{N} ._-]/gu, "_").trim() || "predicazione";
-    const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = safe + ".txt";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 15000);
-  }
-  $("exportSermon").addEventListener("click", () => { const d = readForm(); download(d.title, sermonText(d)); });
-
-  /* ---------- Elenchi ---------- */
-  const delButton = (kind, i) => '<button data-act="del" data-kind="' + kind + '" data-i="' + i + '">Elimina</button>';
-  function render() {
-    $("notesList").innerHTML = data.notes.map((n, i) =>
-      '<div class="item"><strong>' + esc(n.type) + " · " + esc(n.ref) + "</strong>" +
-      (n.quote ? '<p class="quote">«' + esc(n.quote) + "»</p>" : "") +
-      "<p>" + esc(n.text) + "</p><small>" + esc(n.date) + "</small><br>" + delButton("notes", i) + "</div>"
-    ).join("") || '<p class="muted">Non hai ancora salvato appunti.</p>';
-    $("commentList").innerHTML = data.comments.map((c, i) =>
-      '<div class="item"><strong>' + esc(c.title) + "</strong><p>" + esc(c.ref || "Nessun riferimento") + " · " +
-      esc(c.file || "Commentario personale") + "</p><small>" + esc(c.date) + "</small><br>" + delButton("comments", i) + "</div>"
-    ).join("") || '<p class="muted">La tua biblioteca dei commentari è vuota.</p>';
-    $("sermonList").innerHTML = data.sermons.map((s, i) =>
-      '<div class="item"><strong>' + esc(s.title) + "</strong><p>" + esc(s.ref || "Nessun riferimento") + " · " + esc(s.date) + "</p>" +
-      '<button data-act="edit" data-i="' + i + '">Apri e modifica</button>' + delButton("sermons", i) +
-      '<button data-act="export" data-i="' + i + '">Esporta .txt</button></div>'
-    ).join("") || '<p class="muted">Non hai ancora creato predicazioni.</p>';
-    $("nNotes").textContent = data.notes.length;
-    $("nSermons").textContent = data.sermons.length;
-    $("nComments").textContent = data.comments.length;
-  }
-  document.addEventListener("click", e => {
-    const btn = e.target.closest ? e.target.closest("button[data-act]") : null;
-    if (!btn) return;
-    const i = Number(btn.dataset.i), act = btn.dataset.act;
-    if (act === "del") {
-      if (!confirmed(btn, "Tocca di nuovo per eliminare")) return;
-      const kind = btn.dataset.kind;
-      data[kind].splice(i, 1);
-      save(kind);
-      if (kind === "sermons" && editing !== null) {
-        if (editing === i) setEditing(null);          // il testo resta nell'editor come nuova predicazione
-        else if (editing > i) editing -= 1;
-      }
-      render();
-    } else if (act === "edit") {
-      if (formChanged() && !confirmed(btn, "Scartare il testo non salvato?")) return;
-      fillForm(data.sermons[i]);
-      setEditing(i);
-      $("sermonEditor").scrollIntoView({ block: "start", behavior: "smooth" });
-    } else if (act === "export") {
-      download(data.sermons[i].title, sermonText(data.sermons[i]));
-    }
-  });
-
-  /* ---------- Avvio ---------- */
-  fillForm(null);
-  updateReading();
-  render();
-
-  /* ---------- Installazione (PWA) ---------- */
-  let installPrompt = null;
-  const installBtn = $("installApp");
-  window.addEventListener("beforeinstallprompt", e => {
-    e.preventDefault();
-    installPrompt = e;
-    installBtn.hidden = false;
-  });
-  installBtn.addEventListener("click", async () => {
-    if (!installPrompt) { toast("Apri il menu ⋮ del browser e scegli «Installa app»."); return; }
-    installPrompt.prompt();
-    try { await installPrompt.userChoice; } catch (e) {}
-    installPrompt = null;
-    installBtn.hidden = true;
-  });
-  window.addEventListener("appinstalled", () => { installBtn.hidden = true; });
-  if ("serviceWorker" in navigator && location.protocol !== "file:") {
-    window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(() => {}));
-  }
+/* ============ avvio ============ */
+function renderAll() { applyTheme(); renderReader(); if (S.tab === 'ser') renderSermons(); if (S.tab === 'com') renderComm(); if (S.tab === 'me') renderMe(); }
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return;
+  const f = ACT[t.dataset.act]; if (f) f(t, e, t.closest('.layer'));
+});
+(async function boot() {
+  await KV.init();
+  const d = await KV.get('data');
+  if (d) { D = Object.assign(D, d); D.settings = Object.assign({ size: 19, theme: 'carta', bible: null, last: { bk: 42, ch: 3 }, legend: {} }, d.settings || {}); }
+  const c = await KV.get('comms'); if (c) C = c;
+  migrateLegacy();
+  history.replaceState({ l: 0 }, '');
+  if (D.settings.bible) await loadBible(D.settings.bible);
+  if (!BIBLE && D.bibles.length) await loadBible(D.bibles[0].id);
+  S.bk = D.settings.last.bk; S.ch = D.settings.last.ch;
+  if (BIBLE && !hasBook(S.bk)) { S.bk = BOOKS.findIndex((_, i) => hasBook(i)); S.ch = 1; }
+  renderAll(); window.__ready = true;
 })();
-</script>
-</body>
-</html>
+</script></body></html>
