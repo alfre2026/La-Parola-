@@ -9,7 +9,7 @@ Sito: https://alfre2026.github.io/La-Parola-/ — GitHub Pages dal ramo `main`, 
 - Tutti i file stanno nella cartella principale e si richiamano con percorsi relativi: il sito vive in una sottocartella.
 
 ## Regole
-- Dati in `localStorage` con le chiavi `lp_notes`, `lp_sermons`, `lp_comments`: non rinominarle, l'utente perderebbe i dati. Ogni nuova chiave con prefisso `lp_`.
+- Dati: il testo biblico (circa 4 MB) e i dati dell'utente stanno in IndexedDB (database `laparola`, chiavi `data`, `comms`, `bible:<id>`), perché localStorage è troppo piccolo; se IndexedDB non c'è si ripiega su localStorage con chiavi `lp_data`, `lp_comms`. Le vecchie chiavi del prototipo `lp_notes`, `lp_sermons`, `lp_comments` NON vanno rinominate né cancellate: all'avvio `migrateLegacy()` ne importa predicazioni e appunti una sola volta. Ogni nuova chiave localStorage con prefisso `lp_`. Non cambiare i nomi di database e chiavi: l'utente perderebbe i dati.
 - Sullo stesso indirizzo (alfre2026.github.io) ci sono altre app: il service worker elimina solo le cache che iniziano con `la-parola-`.
 - Service worker: prima la rete (attesa massima 3 s), poi la copia salvata. Un file nuovo va aggiunto all'elenco `EXTRA`. Non serve cambiare il nome della cache a ogni modifica: l'app si aggiorna da sola alla riapertura.
 - Niente `alert`, `confirm`, `prompt`: avvisi con `toast()`, conferme con il doppio tocco di `confirmed()`.
@@ -22,4 +22,4 @@ Prova in Chrome con schermo da telefono (circa 408×900, touch): nessun errore i
 Ramo `claude/...` → pull request con `gh api` (REST; `gh pr` qui non funziona) → unione in `main` con `gh api -X PUT repos/alfre2026/la-parola-/pulls/N/merge`. Pages si aggiorna in circa un minuto (controllo: `gh api repos/alfre2026/la-parola-/actions/runs`).
 
 ## Stato
-Prototipo: testo biblico solo dimostrativo (Genesi 1:1-4), sottolineature visibili solo nell'elenco degli appunti, dei commentari si registra solo il nome del file, nessuna sincronizzazione tra dispositivi.
+Versione completa (nov. 2026): lettore a capitoli con testo biblico scaricabile (Riveduta 2020 da GitHub, una volta sola) o importabile da file (JSON o «Giovanni 3:16 testo», per la NR06); menu su ogni versetto; 12 colori pastello, evidenziazione di versetti o singole parole (selezione col dito o «Parole»), visibile nel testo e in «Personale»; note con icona accanto al versetto; trasferimento dei versetti nei sermoni (punti numerati, vista «Predica»); commentari importati da testo/file con riferimenti riconosciuti in automatico e associabili a mano ai versetti; ricerca, segnalibri, backup JSON. Il testo NR06 non è nel repository (copyright). Nessuna sincronizzazione tra dispositivi.
