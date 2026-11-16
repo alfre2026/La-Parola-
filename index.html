@@ -1057,7 +1057,7 @@ function buildEntries(text, def) {
   if (tt[0] === '{') {
     try {
       const j = JSON.parse(tt);
-      if (Array.isArray(j.entries)) return { title: j.title, author: j.author, entries: j.entries.map(e => ({ id: uid(), title: e.title || '', body: e.text || e.body || '', refs: String(e.ref || e.refs || '').split(/[;|]/).map(s => parseRef(s.trim())).filter(Boolean) })) };
+      if (Array.isArray(j.entries)) return { title: j.title, author: j.author, key: j.key || '', entries: j.entries.map(e => ({ id: uid(), title: e.title || '', src: e.src || '', body: e.text || e.body || '', refs: String(e.ref || e.refs || '').split(/[;|]/).map(s => parseRef(s.trim())).filter(Boolean) })) };
     } catch (e) {}
   }
   const lines = tt.replace(/\r/g, '').split('\n'), entries = []; let cur = null, loose = [], ch = 0;
@@ -1139,8 +1139,10 @@ ACT.cmsave = (el, e, d) => {
   const r = d.big ? (d.bigR || buildEntries(tx, -1)) : buildEntries(tx, +$('#cmb', d).value); let entries = r.entries;
   if (!entries.some(x => x.refs.length) && entries.length <= 1) entries = [{ id: uid(), title: '', refs: [], body: tx.trim() }];
   const title = $('#cmt', d).value.trim() || r.title || 'Commentario senza titolo';
-  C.list.push({ id: uid(), title, author: $('#cma', d).value.trim() || r.author || '', entries });
-  saveC(); closeTop(); renderComm(); toast(`«${title}» aggiunto · ${entries.filter(x => x.refs.length).length} sezioni collegate`);
+  const old = r.key ? C.list.find(c => c.key === r.key || c.title === title) : null, author = $('#cma', d).value.trim() || r.author || '';
+  if (old) { old.title = title; old.author = author; old.key = r.key; old.entries = entries; }   /* stesso commentario ricaricato: lo aggiorno invece di duplicarlo */
+  else C.list.push({ id: uid(), title, author, key: r.key || '', entries });
+  saveC(); closeTop(); renderComm(); toast(`«${title}» ${old ? 'aggiornato' : 'aggiunto'} · ${entries.filter(x => x.refs.length).length} sezioni collegate`);
 };
 
 /* sezione (lettura / modifica / associazione) */
@@ -1152,10 +1154,11 @@ function openEntry(cid, eid, editing, isNew) {
     const chips = `<div class="pad" style="padding-bottom:0"><div class="mut" style="margin-bottom:4px">${esc(c.title)} · versetti associati</div>${e.refs.map((r, j) => `<span class="vchip"><span data-act="vgo" data-bk="${r.bk}" data-c="${r.c1}" data-v="${r.v1 === 1 && r.v2 === 999 ? 0 : r.v1}">${esc(refLabel(r))}</span><button data-act="entunlink" data-j="${j}" aria-label="Rimuovi">${ic('x')}</button></span>`).join('') || '<span class="badge">nessuno</span> '}<button class="btn sec sm" data-act="entlink">${ic('link')} Associa versetti</button></div>`;
     if (d.ctx.editing) return head + chips + `<div class="pad"><label class="l">Titolo della sezione</label><input type="text" id="etit" value="${esc(e.title)}"><label class="l">Testo</label><textarea id="ebody" style="min-height:300px">${esc(e.body)}</textarea><div class="row" style="margin-top:12px"><button class="btn" data-act="entsave">${ic('check')} Salva</button><button class="btn sec" data-act="entcancel">Annulla</button></div></div>`;
     const r0 = e.refs[0], bt = r0 && BIBLE ? `<details class="card" ${d.ctx.openText ? 'open' : ''}><summary style="font-weight:650;cursor:pointer">Testo biblico · ${esc(refLabel(r0))}</summary><div class="vquote" style="margin-top:8px">${vquote(r0.v2 - r0.v1 > 25 || r0.c2 !== r0.c1 ? { ...r0, c2: r0.c1, v2: Math.min(r0.v2, r0.v1 + 25) } : r0)}</div></details>` : '';
-    return head + chips + bt + `<div class="pad body">${bodyHTML(e.body) || '<p class="mut">Sezione vuota.</p>'}</div><div class="pad row w"><button class="btn sec" data-act="entedit">${ic('pen')} Modifica</button><button class="btn sec" data-act="entdel">${ic('trash')} Elimina sezione</button></div>`;
+    return head + chips + srcNote(e).replace('<div class="mut"', '<div class="pad mut"') + bt + `<div class="pad body">${bodyHTML(e.body) || '<p class="mut">Sezione vuota.</p>'}</div><div class="pad row w"><button class="btn sec" data-act="entedit">${ic('pen')} Modifica</button><button class="btn sec" data-act="entdel">${ic('trash')} Elimina sezione</button></div>`;
   }, { ctx: { cid, eid, editing: !!editing, isNew: !!isNew, openText: true } });
 }
 const ENT = d => CM(d.ctx.cid).entries.find(x => x.id === d.ctx.eid);
+const srcNote = e => e.src ? `<div class="mut" style="display:flex;gap:6px;align-items:flex-start;margin:6px 0 2px">${ic('book')}<span>${esc(e.src)}</span></div>` : '';
 ACT.entback = (el, e, d) => { if (d.ctx.isNew && !ENT(d).body) { const c = CM(d.ctx.cid); c.entries = c.entries.filter(x => x.id !== d.ctx.eid); saveC(); } closeTop(); };
 ACT.entedit = (el, e, d) => { d.ctx.editing = true; refreshLayer(d); };
 ACT.entcancel = (el, e, d) => { if (d.ctx.isNew && !ENT(d).body) return ACT.entback(el, e, d); d.ctx.editing = false; refreshLayer(d); };
@@ -1186,7 +1189,7 @@ ACT.comments = () => {
     if (!g) return `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>Scegli il commentario · ${lab}</h2></div>${groups.map(y => `<div class="card tap" data-act="cchoose" data-id="${y.c.id}"><h3>${esc(y.c.title)}</h3><div class="mut">${y.c.author ? esc(y.c.author) + ' · ' : ''}${y.list.length} sezion${y.list.length === 1 ? 'e tratta' : 'i trattano'} questi versetti</div></div>`).join('')}${extra}`;
     const best = g.list[0], rest = g.list.slice(1), e = best.e;
     return `<div class="pg-head"><button class="ib" data-act="${groups.length > 1 ? 'cback' : 'close'}">${ic('back')}</button><h2>${esc(g.c.title)} · ${lab}</h2></div>
-    <div class="pad" style="padding-bottom:0"><div class="row w"><span class="ref">${e.refs.length ? esc(e.refs.map(refLabel).join(' · ')) : ''}</span><button class="btn sec sm" data-act="entopen" data-cid="${g.c.id}" data-eid="${e.id}">${ic('pen')} Apri / modifica</button></div>${e.title ? `<h3 style="margin:8px 0 0">${esc(e.title)}</h3>` : ''}</div>
+    <div class="pad" style="padding-bottom:0"><div class="row w"><span class="ref">${e.refs.length ? esc(e.refs.map(refLabel).join(' · ')) : ''}</span><button class="btn sec sm" data-act="entopen" data-cid="${g.c.id}" data-eid="${e.id}">${ic('pen')} Apri / modifica</button></div>${e.title ? `<h3 style="margin:8px 0 0">${esc(e.title)}</h3>` : ''}${srcNote(e)}</div>
     <div class="pad body">${bodyHTML(e.body) || '<p class="mut">Sezione vuota.</p>'}</div>
     ${rest.length ? `<div class="sech" style="padding:0 14px">Altre sezioni che trattano questi versetti</div>${rest.map(x => entryCard(x.c, x.e)).join('')}` : ''}${extra}`;
   }, { ctx: { refs, cid: null } });
