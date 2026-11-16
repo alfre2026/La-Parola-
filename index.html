@@ -41,6 +41,9 @@ svg.ink{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:non
 .vs.flash{animation:fl 2.2s ease-out}
 @keyframes fl{0%,40%{background:var(--flash)}100%{background:transparent}}
 .w.pk{outline:2px solid var(--acc);border-radius:3px}
+.selh{position:absolute;width:48px;height:54px;margin-left:-24px;z-index:6;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;display:none}
+.selh i{position:absolute;left:50%;top:0;width:3px;height:9px;margin-left:-1.5px;background:var(--acc)}
+.selh b{position:absolute;left:50%;top:7px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:var(--acc);box-shadow:0 1px 5px rgba(0,0,0,.4);border:2px solid #fff}
 .ni{display:inline-flex;vertical-align:-3px;margin:0 2px 0 5px;width:24px;height:24px;border-radius:7px;background:var(--accsoft);color:var(--acc);align-items:center;justify-content:center;position:relative}
 .ni svg{width:15px;height:15px}
 .ni b{position:absolute;top:-5px;right:-5px;background:var(--acc);color:#fff;border-radius:8px;font:700 10px system-ui;padding:0 4px;line-height:14px}
@@ -261,11 +264,11 @@ const BOOKS = [
   ['Ezechiele', 'ez ezechiele'], ['Daniele', 'dan da dn daniele'], ['Osea', 'os osea'], ['Gioele', 'gl gioe gioele'], ['Amos', 'am amos'],
   ['Abdia', 'abd ab abdia'], ['Giona', 'gion gna giona'], ['Michea', 'mic mi michea'], ['Naum', 'na nah naum'], ['Abacuc', 'abac ac abacuc hc'],
   ['Sofonia', 'sof sf sofonia'], ['Aggeo', 'agg ag aggeo'], ['Zaccaria', 'zac zc zaccaria'], ['Malachia', 'mal ml malachia'],
-  ['Matteo', 'matt mt matteo'], ['Marco', 'mar mc mr marco'], ['Luca', 'luc lc luca'], ['Giovanni', 'giov gv gio giovanni'], ['Atti', 'at atti'],
+  ['Matteo', 'matt mt matteo'], ['Marco', 'mar mc mr marco'], ['Luca', 'luc lc lu luca'], ['Giovanni', 'giov gv gio giovanni'], ['Atti', 'at atti'],
   ['Romani', 'rom rm ro romani'], ['1 Corinzi', '1cor 1co 1corinzi'], ['2 Corinzi', '2cor 2co 2corinzi'], ['Galati', 'gal ga galati'], ['Efesini', 'ef efes efesini'],
-  ['Filippesi', 'fil flp filippesi'], ['Colossesi', 'col colossesi'], ['1 Tessalonicesi', '1tess 1ts 1te 1tessalonicesi'], ['2 Tessalonicesi', '2tess 2ts 2te 2tessalonicesi'],
-  ['1 Timoteo', '1tim 1ti 1timoteo'], ['2 Timoteo', '2tim 2ti 2timoteo'], ['Tito', 'tit tt tito'], ['Filemone', 'filem flm filemone'], ['Ebrei', 'ebr eb ebrei'],
-  ['Giacomo', 'giac gc gm giacomo'], ['1 Pietro', '1pie 1pt 1piet 1pietro'], ['2 Pietro', '2pie 2pt 2piet 2pietro'], ['1 Giovanni', '1giov 1gv 1gio 1giovanni'],
+  ['Filippesi', 'fil flp fl filippesi'], ['Colossesi', 'col cl colossesi'], ['1 Tessalonicesi', '1tess 1ts 1te 1tessalonicesi'], ['2 Tessalonicesi', '2tess 2ts 2te 2tessalonicesi'],
+  ['1 Timoteo', '1tim 1ti 1timoteo'], ['2 Timoteo', '2tim 2ti 2timoteo'], ['Tito', 'tit tt tito'], ['Filemone', 'filem flm fm filemone'], ['Ebrei', 'ebr eb ebrei'],
+  ['Giacomo', 'giac gc gm giacomo'], ['1 Pietro', '1pie 1pt 1pi 1piet 1pietro'], ['2 Pietro', '2pie 2pt 2pi 2piet 2pietro'], ['1 Giovanni', '1giov 1gv 1gio 1giovanni'],
   ['2 Giovanni', '2giov 2gv 2gio 2giovanni'], ['3 Giovanni', '3giov 3gv 3gio 3giovanni'], ['Giuda', 'gda gd giuda'], ['Apocalisse', 'ap apoc apocalisse rivelazione']
 ].map(([n, a]) => ({ n, a: a.split(' ') }));
 const ALIAS = {};
@@ -464,6 +467,26 @@ function paintSel() {
     $$('#text .vs').forEach(vs => { const v = +vs.dataset.v; if (v < a.v || v > b.v) return;
       $$('.w', vs).forEach(w => { const i = +w.dataset.i; if ((v > a.v || i >= a.i) && (v < b.v || i <= b.i)) w.classList.add('pr'); }); });
   }
+  placeHandles();
+}
+/* maniglie per trascinare l'inizio e la fine della selezione di parole */
+const wordEl = p => $(`#text .vs[data-v="${p.v}"] .w[data-i="${p.i}"]`);
+function wordRects(w) {
+  const t = w.firstChild; if (!t || t.nodeType !== 3) return w.getClientRects();
+  const r = document.createRange(); r.setStart(t, 0); r.setEnd(t, Math.max(1, t.data.trimEnd().length)); return r.getClientRects();
+}
+function placeHandles() {
+  const box = $('#text'); if (!box) return;
+  let hs = $$(':scope > .selh', box);
+  if (!(S.sel && S.sel.words) || S.tab !== 'read') { hs.forEach(h => h.style.display = 'none'); return; }
+  if (hs.length < 2) { hs.forEach(h => h.remove()); hs = ['a', 'b'].map(k => { const h = document.createElement('div'); h.className = 'selh'; h.dataset.w = k; h.innerHTML = '<i></i><b></b>'; box.appendChild(h); return h; }); }
+  const { a, b } = S.sel.words, bb = box.getBoundingClientRect();
+  [[hs.find(h => h.dataset.w === 'a'), a, true], [hs.find(h => h.dataset.w === 'b'), b, false]].forEach(([h, p, start]) => {
+    const w = wordEl(p); if (!w) { h.style.display = 'none'; return; }
+    const rs = wordRects(w); if (!rs.length) { h.style.display = 'none'; return; }
+    const r = start ? rs[0] : rs[rs.length - 1];
+    h.style.display = 'block'; h.style.left = ((start ? r.left : r.right) - bb.left) + 'px'; h.style.top = (r.bottom - bb.top - 2) + 'px';
+  });
 }
 function setSel(sel) { S.sel = sel; paintSel(); showSheet(); }
 function clearSel(keepNative) {
@@ -527,7 +550,7 @@ function showSheet() {
   const allBm = sortedVerses().every(v => D.marks[`${S.bk}.${S.ch}.${v}`]);
   const nc = commentsForSel().length;
   const single = s.words && s.words.a.v === s.words.b.v && s.words.a.i === s.words.b.i;
-  const hint = S.pick ? `<div class="hint">Tocca la parola da evidenziare</div>` : S.extend ? `<div class="hint">Tocca l’ultimo versetto dell’intervallo</div>` : s.words ? `<div class="hint">${single ? 'Tocca un’altra parola per estendere la selezione' : 'Tocca un’altra parola per cambiare la fine'} · due tocchi su una parola per ripartire da lì</div>` : '';
+  const hint = S.pick ? `<div class="hint">Tocca la parola da evidenziare</div>` : S.extend ? `<div class="hint">Tocca l’ultimo versetto dell’intervallo</div>` : s.words ? `<div class="hint">${single ? 'Trascina le maniglie (o tocca un’altra parola) per estendere la selezione' : 'Trascina le maniglie per cambiare inizio e fine'} · due tocchi su una parola per ripartire da lì, anche trascinando</div>` : '';
   const html = `<div class="in"><div class="sh-top"><b>${esc(selLabel())} ${s.words ? `<small>· ${nWd} parol${nWd === 1 ? 'a' : 'e'}</small>` : ''}</b><button class="ib" data-act="selclear" aria-label="Chiudi">${ic('x')}</button></div>${hint}
   <div class="cols">${COLORS.map((c, i) => `<button class="cdot" data-act="color" data-i="${i}" style="background:${c[1]}" aria-label="${c[0]}"></button>`).join('')}<button class="cdot x" data-act="color" data-i="-1" aria-label="Rimuovi evidenziazione">${ic('ban')}</button></div>
   <div class="acts">
@@ -636,7 +659,7 @@ function nearestWord(x, y) {
   return best && { el: best, d: bd };
 }
 $('#text').addEventListener('click', e => {
-  if (e.target.closest('[data-act]')) return;
+  if (e.target.closest('[data-act]') || e.target.closest('.selh')) return;
   if (Date.now() - lastSelAt < 450) return;
   const g = getSelection(); if (g && !g.isCollapsed) return;
   let w = e.target.closest('.w'), vs = e.target.closest('.vs');
@@ -649,6 +672,44 @@ $('#text').addEventListener('click', e => {
   if (S.sel && S.sel.words) { if (w) extendWord(v, i); return; }
   vs.classList.remove('flash'); toggleVerse(v);
 });
+
+/* trascinamento col dito: maniglie di inizio/fine, oppure doppio tocco su una parola e scorrimento */
+let HD = null;
+function dragTo(x, y) {
+  const n = nearestWord(x, y); if (!n || n.d > 90) return;
+  const w = n.el, vs = w.closest('.vs'); if (!vs) return;
+  const P = { v: +vs.dataset.v, i: +w.dataset.i }, F = HD.fixed;
+  let A = F, B = P; if (B.v < A.v || (B.v === A.v && B.i < A.i)) [A, B] = [B, A];
+  const cur = S.sel && S.sel.words; if (cur && cur.a.v === A.v && cur.a.i === A.i && cur.b.v === B.v && cur.b.i === B.i) return;
+  const vset = new Set(); for (let k = A.v; k <= B.v; k++) vset.add(k);
+  S.pick = null; S.extend = false; S.sel = { verses: vset, words: { a: A, b: B }, anchor: F, native: false }; paintSel();
+}
+function dragStep() {
+  if (!HD || !HD.pt) return;
+  const sh = $('#sheet'), top = 80, bot = innerHeight - (sh && sh.classList.contains('on') ? sh.offsetHeight : 0) - 30, y = HD.pt.y;
+  if (y < top) scrollBy(0, -Math.min(14, (top - y) / 5 + 4)); else if (y > bot) scrollBy(0, Math.min(14, (y - bot) / 5 + 4));
+  dragTo(HD.pt.x, HD.pt.y - HD.off);
+}
+function dragMove(e) { if (!HD) return; e.preventDefault(); const t = e.touches[0]; HD.pt = { x: t.clientX, y: t.clientY }; dragTo(t.clientX, t.clientY - HD.off); }
+function dragBegin(h) { HD = h; HD.timer = setInterval(dragStep, 40); document.addEventListener('touchmove', dragMove, { passive: false }); }
+function dragEnd() { if (!HD) return; clearInterval(HD.timer); document.removeEventListener('touchmove', dragMove); HD = null; if (S.sel) showSheet(); }
+$('#text').addEventListener('touchstart', e => {
+  if (e.touches.length !== 1) { dragEnd(); return; }
+  const t = e.touches[0], h = e.target.closest('.selh');
+  if (h && S.sel && S.sel.words) {
+    e.preventDefault(); const { a, b } = S.sel.words;
+    dragBegin({ fixed: h.dataset.w === 'a' ? b : a, off: 22, pt: { x: t.clientX, y: t.clientY } }); return;
+  }
+  if (e.target.closest('[data-act]')) return;
+  let w = e.target.closest('.w'); if (!w) { const n = nearestWord(t.clientX, t.clientY); if (n && n.d <= 46) w = n.el; }
+  const vs = w && w.closest('.vs'); if (!vs) return;
+  const v = +vs.dataset.v, i = +w.dataset.i;
+  if (lastTap.v === v && lastTap.i === i && Date.now() - lastTap.t < 400) {   /* secondo tocco: parola e poi scorri col dito */
+    e.preventDefault(); lastTap = { t: 0, v: 0, i: -1 }; startWord(v, i);
+    dragBegin({ fixed: { v, i }, off: 0, pt: { x: t.clientX, y: t.clientY } });
+  }
+}, { passive: false });
+document.addEventListener('touchend', dragEnd); document.addEventListener('touchcancel', dragEnd);
 
 /* ----- evidenziatore a pennarello (tratti SVG per riga) ----- */
 const NS = 'http://www.w3.org/2000/svg';
@@ -688,7 +749,7 @@ function drawInk(box) {
   box.appendChild(svg);
 }
 let _inkT;
-function inkSoon() { clearTimeout(_inkT); _inkT = setTimeout(() => requestAnimationFrame(() => { if (S.tab === 'read') drawInk($('#text')); }), 30); }
+function inkSoon() { clearTimeout(_inkT); _inkT = setTimeout(() => requestAnimationFrame(() => { if (S.tab === 'read') { drawInk($('#text')); placeHandles(); } }), 30); }
 addEventListener('resize', inkSoon);
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(inkSoon);
 if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener('loadingdone', inkSoon);
@@ -940,6 +1001,8 @@ ACT.topt = (el, e, d) => {
 };
 /* ============ commentari ============ */
 const CM = id => C.list.find(c => c.id === id);
+const _nc = new WeakMap();
+function entNorm(e) { const k = e.title + '\u0001' + e.body, h = _nc.get(e); if (h && h.k === k) return h.n; const n = norm(e.title + ' ' + e.body); _nc.set(e, { k, n }); return n; }
 function commentsFor(bk, ch, vs) {
   const out = [];
   C.list.forEach(c => c.entries.forEach(e => {
@@ -1017,7 +1080,7 @@ function commRes() {
   if (q) {
     const r = parseRef(q); let res = [];
     if (r) { for (const c of C.list) for (const e of c.entries) { const hit = e.refs.filter(x => x.bk === r.bk && x.c1 <= r.c2 && x.c2 >= r.c1 && (r.c1 !== r.c2 || P(x.c2, x.v2) >= P(r.c1, r.v1) && P(x.c1, x.v1) <= P(r.c2, r.v2))); if (hit.length) res.push({ c, e, span: Math.min(...hit.map(refSpan)) }); } res.sort((a, b) => a.span - b.span); }
-    else { const n = norm(q); for (const c of C.list) for (const e of c.entries) if (norm(e.title + ' ' + e.body).includes(n)) res.push({ c, e }); res = res.slice(0, 60); }
+    else { const n = norm(q); for (const c of C.list) for (const e of c.entries) if (entNorm(e).includes(n)) res.push({ c, e }); res = res.slice(0, 60); }
     h = `<div class="mut" style="padding:10px 16px 0">${res.length} risultat${res.length === 1 ? 'o' : 'i'}${r ? ' per ' + esc(refLabel(r)) : ''}</div>` + res.map(x => entryCard(x.c, x.e)).join('');
   } else {
     h = C.list.length ? C.list.map(c => `<div class="card tap" data-act="comopen" data-id="${c.id}"><h3>${esc(c.title)}</h3><div class="mut">${c.author ? esc(c.author) + ' · ' : ''}${c.entries.length} sezion${c.entries.length === 1 ? 'e' : 'i'}${c.entries.some(e => !e.refs.length) ? ' · ' + c.entries.filter(e => !e.refs.length).length + ' da associare' : ''}</div></div>`).join('') : `<div class="empty"><h2>Nessun commentario</h2>Aggiungi un commentario (testo incollato o file): le sezioni che iniziano con un riferimento, per esempio «Giovanni 3:16-21», si collegano da sole ai versetti. Poi, nel testo, tocca un versetto e «Commentario».</div>`;
@@ -1055,20 +1118,25 @@ ACT.comadd = () => {
   <div class="hint" id="cmprev" style="margin-top:10px">Nessun testo</div>
   <div class="row" style="margin-top:12px"><button class="btn" data-act="cmsave">${ic('check')} Aggiungi</button><button class="btn sec" data-act="close">Annulla</button></div>`);
   const d = layers[layers.length - 1], upd = () => {
-    const tx = $('#cmx', d).value; if (!tx.trim()) return $('#cmprev', d).textContent = 'Nessun testo';
-    const r = buildEntries(tx, +$('#cmb', d).value), n = r.entries.filter(e => e.refs.length).length, un = r.entries.length - n;
+    const tx = d.big || $('#cmx', d).value; if (!tx.trim()) return $('#cmprev', d).textContent = 'Nessun testo';
+    const r = d.big ? (d.bigR = d.bigR || buildEntries(tx, -1)) : buildEntries(tx, +$('#cmb', d).value), n = r.entries.filter(e => e.refs.length).length, un = r.entries.length - n;
+    if (d.big) { if (!$('#cmt', d).value && r.title) $('#cmt', d).value = r.title; if (!$('#cma', d).value && r.author) $('#cma', d).value = r.author; }
     $('#cmprev', d).innerHTML = n ? `<b>${n}</b> sezion${n === 1 ? 'e riconosciuta' : 'i riconosciute'} e collegat${n === 1 ? 'a' : 'e'} ai versetti${un ? `, ${un} senza riferimento` : ''}.<br><span class="mut">${esc(r.entries.filter(e => e.refs.length).slice(0, 4).map(e => refLabel(e.refs[0])).join(' · '))}${n > 4 ? ' …' : ''}</span>` : 'Nessun riferimento riconosciuto: creo un’unica sezione che potrai associare ai versetti a mano.';
   };
-  d.upd = upd; $('#cmx', d).oninput = upd; $('#cmb', d).onchange = upd;
+  d.upd = upd; $('#cmx', d).oninput = () => { d.big = null; d.bigR = null; upd(); }; $('#cmb', d).onchange = () => { if (!d.big) upd(); };
 };
 ACT.cmfile = async (el, e, d) => {
   const f = await pickFile('.txt,.md,.html,.htm,.json,text/plain,text/html,application/json'); if (!f) return;
   let t = f.text; if (/\.html?$/i.test(f.name) || /<\/(p|div|h\d)>/i.test(t.slice(0, 3000))) t = htmlToText(t);
-  $('#cmx', d).value = t; if (!$('#cmt', d).value) $('#cmt', d).value = f.name.replace(/\.[^.]+$/, ''); d.upd();
+  if (t.trimStart()[0] === '{' && t.length > 150000) {   /* file JSON grande: non lo metto nella casella di testo */
+    d.big = t; d.bigR = null; const x = $('#cmx', d); x.value = ''; x.placeholder = `File caricato: ${f.name} (${(t.length / 1e6).toFixed(1)} MB)`;
+    $('#cmprev', d).textContent = 'Lettura del file…'; setTimeout(() => { try { d.upd(); } catch (er) { $('#cmprev', d).textContent = 'File non valido'; } }, 30); return;
+  }
+  d.big = null; d.bigR = null; $('#cmx', d).value = t; if (!$('#cmt', d).value) $('#cmt', d).value = f.name.replace(/\.[^.]+$/, ''); d.upd();
 };
 ACT.cmsave = (el, e, d) => {
-  const tx = $('#cmx', d).value; if (!tx.trim()) return toast('Incolla o carica un testo');
-  const r = buildEntries(tx, +$('#cmb', d).value); let entries = r.entries;
+  const tx = d.big || $('#cmx', d).value; if (!tx.trim()) return toast('Incolla o carica un testo');
+  const r = d.big ? (d.bigR || buildEntries(tx, -1)) : buildEntries(tx, +$('#cmb', d).value); let entries = r.entries;
   if (!entries.some(x => x.refs.length) && entries.length <= 1) entries = [{ id: uid(), title: '', refs: [], body: tx.trim() }];
   const title = $('#cmt', d).value.trim() || r.title || 'Commentario senza titolo';
   C.list.push({ id: uid(), title, author: $('#cma', d).value.trim() || r.author || '', entries });
@@ -1110,12 +1178,21 @@ ACT.entnew = (el, e, d) => { const c = CM(el.dataset.cid), en = { id: uid(), tit
 ACT.comments = () => {
   const refs = selRefs(), vs = [...S.sel.verses], bk = S.bk, ch = S.ch;
   openLayer('page', d => {
-    const res = commentsFor(bk, ch, vs);
-    return `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>Commentari · ${esc(refs.map(refLabel).join(' · '))}</h2></div>
-    ${res.length ? res.map(x => entryCard(x.c, x.e)).join('') : `<div class="empty"><h2>Nessun commentario associato</h2>Nessuna sezione dei tuoi commentari tratta questi versetti.</div>`}
-    <div class="pad"><div style="display:grid;gap:10px"><button class="btn sec" data-act="cpick">${ic('link')} Associa una sezione esistente</button><button class="btn sec" data-act="cmine">${ic('pen')} Scrivi un mio commento qui</button></div></div>`;
-  }, { ctx: { refs } });
+    const res = commentsFor(bk, ch, vs), groups = [];
+    res.forEach(x => { let g = groups.find(y => y.c === x.c); if (!g) groups.push(g = { c: x.c, list: [] }); g.list.push(x); });
+    const lab = esc(refs.map(refLabel).join(' · ')), extra = `<div class="pad"><div style="display:grid;gap:10px"><button class="btn sec" data-act="cpick">${ic('link')} Associa una sezione esistente</button><button class="btn sec" data-act="cmine">${ic('pen')} Scrivi un mio commento qui</button></div></div>`;
+    if (!groups.length) return `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>Commentari · ${lab}</h2></div><div class="empty"><h2>Nessun commentario associato</h2>Nessuna sezione dei tuoi commentari tratta questi versetti.</div>${extra}`;
+    const g = groups.length === 1 ? groups[0] : groups.find(y => y.c.id === d.ctx.cid);
+    if (!g) return `<div class="pg-head"><button class="ib" data-act="close">${ic('back')}</button><h2>Scegli il commentario · ${lab}</h2></div>${groups.map(y => `<div class="card tap" data-act="cchoose" data-id="${y.c.id}"><h3>${esc(y.c.title)}</h3><div class="mut">${y.c.author ? esc(y.c.author) + ' · ' : ''}${y.list.length} sezion${y.list.length === 1 ? 'e tratta' : 'i trattano'} questi versetti</div></div>`).join('')}${extra}`;
+    const best = g.list[0], rest = g.list.slice(1), e = best.e;
+    return `<div class="pg-head"><button class="ib" data-act="${groups.length > 1 ? 'cback' : 'close'}">${ic('back')}</button><h2>${esc(g.c.title)} · ${lab}</h2></div>
+    <div class="pad" style="padding-bottom:0"><div class="row w"><span class="ref">${e.refs.length ? esc(e.refs.map(refLabel).join(' · ')) : ''}</span><button class="btn sec sm" data-act="entopen" data-cid="${g.c.id}" data-eid="${e.id}">${ic('pen')} Apri / modifica</button></div>${e.title ? `<h3 style="margin:8px 0 0">${esc(e.title)}</h3>` : ''}</div>
+    <div class="pad body">${bodyHTML(e.body) || '<p class="mut">Sezione vuota.</p>'}</div>
+    ${rest.length ? `<div class="sech" style="padding:0 14px">Altre sezioni che trattano questi versetti</div>${rest.map(x => entryCard(x.c, x.e)).join('')}` : ''}${extra}`;
+  }, { ctx: { refs, cid: null } });
 };
+ACT.cchoose = (el, e, d) => { d.ctx.cid = el.dataset.id; refreshLayer(d); const p = d.querySelector('.panel'); if (p) p.scrollTop = 0; };
+ACT.cback = (el, e, d) => { d.ctx.cid = null; refreshLayer(d); };
 ACT.cmine = (el, e, d) => {
   let c = C.list.find(x => x.id === 'mine'); if (!c) { c = { id: 'mine', title: 'I miei commenti', author: '', entries: [] }; C.list.push(c); }
   const en = { id: uid(), title: '', body: '', refs: d.ctx.refs.map(r => ({ ...r })) }; c.entries.push(en); saveC(); renderComm(); openEntry('mine', en.id, true, true);
