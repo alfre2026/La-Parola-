@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#243b32">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="La Parola">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>La Parola — Bibbia, Studio e Predicazione</title>
+<style>
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:#f5f3ed;color:#26352e;font:15px/1.55 system-ui,-apple-system,Segoe UI,sans-serif}
+.top{height:76px;background:#243b32;color:#f7f0df;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 5vw}
+.brand{display:flex;align-items:center;gap:12px;letter-spacing:.12em;min-width:0}
+.brand strong{font-size:15px;white-space:nowrap}
+.brand small{display:block;font-size:9px;letter-spacing:.18em;color:#d5c8a8;white-space:nowrap}
+.cross{font-size:29px;color:#d9bd7b}
+.local{font-size:11px;color:#d9e5d8}
+.head-actions{display:flex;align-items:center;gap:14px;flex:none}
+.install-btn{background:#d9bd7b;color:#243b32;border:0;font-weight:700;padding:9px 13px;white-space:nowrap}
+.shell{display:grid;grid-template-columns:245px 1fr;max-width:1280px;margin:auto;min-height:calc(100vh - 120px)}
+.sidebar{padding:35px 18px;border-right:1px solid #e2ded2;background:#faf9f5}
+.side-title,.eyebrow{font-size:10px;letter-spacing:.18em;color:#8b8068;font-weight:700;margin:0 0 16px}
+.nav{width:100%;text-align:left;border:0;background:transparent;padding:13px 14px;border-radius:10px;color:#59645c;cursor:pointer;margin:3px 0;font-size:14px}
+.nav span{margin-left:9px}
+.nav.active,.nav:hover{background:#e9eee8;color:#243b32;font-weight:650}
+.side-note{margin:45px 10px;color:#9a968a;font-size:12px}
+main{padding:42px clamp(22px,5vw,70px);max-width:1050px;width:100%;min-width:0}
+.page{display:none}
+.page.show{display:block}
+h1{font:500 clamp(30px,4vw,42px)/1.2 Georgia,serif;margin:0 0 8px;color:#263a30}
+h3{font:600 17px Georgia,serif;margin:0 0 14px}
+.muted{color:#7b817a;margin:0 0 25px}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:20px 0}
+button,select,input,textarea{font:inherit}
+button,select{border:1px solid #d9d8ce;background:#fff;border-radius:8px;padding:10px 13px;color:#35453b;cursor:pointer}
+button.primary{background:#29483a;color:white;border-color:#29483a}
+button.danger{background:#a23b2a;color:white;border-color:#a23b2a}
+button:hover{filter:brightness(.97)}
+button:disabled{opacity:.45;cursor:default}
+.reading,.panel{background:#fff;border:1px solid #e8e4d9;border-radius:14px;padding:25px;margin:18px 0;box-shadow:0 4px 18px #283b3008}
+.chapter-label{font-size:11px;letter-spacing:.13em;color:#8a8069;font-weight:700;margin-bottom:20px}
+.chapter-label b{font-weight:inherit}
+.chapter-label span{color:#c5b88e}
+.chapter-label .sample{float:right;font-size:9px;color:#b18c42}
+.verse{font:19px/1.85 Georgia,serif;color:#39443c;margin:13px 0}
+.verse sup{font:11px system-ui;color:#9a8b6a;margin-right:9px;-webkit-user-select:none;user-select:none}
+.no-text{color:#7b817a;margin:6px 0}
+.hint,.tiny{font-size:12px;color:#8b8b80;margin-top:18px}
+.picked{display:flex;align-items:center;gap:6px;background:#fbf6e6;border:1px solid #ead9a8;border-radius:10px;padding:8px 6px 8px 14px;margin:-6px 0 0}
+.picked-body{flex:1;min-width:0}
+.picked small{display:block;font-size:10px;letter-spacing:.13em;color:#8a8069;font-weight:700;text-transform:uppercase}
+.picked-text{display:block;font:15px/1.4 Georgia,serif;color:#39443c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.picked button{border:0;background:transparent;padding:8px 10px;font-size:15px;color:#8a8069}
+.picked.empty{background:transparent;border-style:dashed;border-color:#d9d8ce}
+.picked.empty .picked-text{color:#8b8b80;font-style:italic}
+.picked.empty button{visibility:hidden}
+.panel label{display:block;font-size:12px;color:#6c756d;font-weight:650;margin:12px 0}
+.panel input,.panel textarea{display:block;width:100%;margin-top:6px;border:1px solid #deded5;border-radius:8px;padding:11px;background:#fdfdfa;color:#293a30;font-size:16px;font-weight:400}
+.panel textarea{min-height:90px;resize:vertical}
+.panel textarea+button{margin-top:12px}
+.stack{display:grid;gap:12px;margin-top:15px}
+.item{background:white;border:1px solid #e7e3d9;border-radius:12px;padding:16px;min-width:0}
+.item strong{font-family:Georgia,serif}
+.item p{margin:6px 0;color:#737b73;white-space:pre-wrap;overflow-wrap:anywhere}
+.item p.quote{font-family:Georgia,serif;font-style:italic;color:#39443c;border-left:3px solid #d9bd7b;padding-left:10px}
+.item button{margin:6px 5px 0 0;font-size:12px;padding:7px 10px}
+.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.edit-state{display:inline-block;border-radius:20px;background:#e9eee8;color:#243b32;padding:5px 12px;font-size:12px;font-weight:650;margin-bottom:6px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}
+.stats div{background:white;border:1px solid #e8e4d9;border-radius:12px;padding:18px;min-width:0}
+.stats strong{display:block;font:30px Georgia,serif}
+.stats span{font-size:12px;color:#81877f}
+.pill{display:inline-block;border-radius:20px;background:#f3ecd9;color:#826a36;padding:5px 10px;font-size:11px}
+footer{text-align:center;color:#aaa596;font-size:11px;padding:20px}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);background:#243b32;color:#f7f0df;padding:11px 16px;border-radius:10px;font-size:13px;line-height:1.4;width:max-content;max-width:min(92vw,460px);text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;box-shadow:0 6px 24px #0000003a;z-index:10}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:760px){
+  .shell{display:block}
+  .sidebar{display:flex;overflow:auto;padding:9px;border-right:0;border-bottom:1px solid #e2ded2}
+  .side-title,.side-note{display:none}
+  .nav{white-space:nowrap;width:auto;padding:10px}
+  .nav span{margin-left:5px}
+  main{padding:28px 17px}
+  .editor-grid{grid-template-columns:1fr}
+  .local{display:none}
+  .top{padding:0 18px}
+  .head-actions{gap:5px}
+  .install-btn{font-size:12px;padding:8px}
+  .reading,.panel{padding:20px 18px}
+}
+@media(max-width:420px){
+  .brand{gap:9px;letter-spacing:.09em}
+  .brand small{font-size:8px;letter-spacing:.1em}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="cross">✝</div><div><strong>LA PAROLA</strong><small>BIBBIA · STUDIO · PREDICAZIONE</small></div></div>
+  <div class="head-actions"><button id="installApp" class="install-btn" hidden>＋ Installa app</button><span class="local">● Archivio su questo dispositivo</span></div>
+</header>
+<div class="shell">
+<aside class="sidebar">
+  <div class="side-title">La tua biblioteca</div>
+  <button class="nav active" data-tab="bible">▤ <span>Bibbia</span></button>
+  <button class="nav" data-tab="notes">✎ <span>Appunti e sottolineature</span></button>
+  <button class="nav" data-tab="commentary">▥ <span>Commentari</span></button>
+  <button class="nav" data-tab="sermons">☷ <span>Predicazioni</span></button>
+  <button class="nav" data-tab="library">▣ <span>Archivio</span></button>
+  <div class="side-note">I tuoi studi, raccolti in un unico luogo.</div>
+</aside>
+<main>
+<section id="bible" class="page show">
+  <div class="eyebrow">LETTURA E STUDIO</div><h1>La Bibbia</h1>
+  <p class="muted">Leggi il testo, seleziona una frase e aggiungi una sottolineatura o un appunto.</p>
+  <div class="toolbar">
+    <select id="book" aria-label="Libro"><option>Genesi</option><option>Salmi</option><option>Giovanni</option><option>Romani</option></select>
+    <select id="chapter" aria-label="Capitolo"><option>1</option><option>2</option><option>3</option></select>
+    <button class="primary" id="addMark">＋ Sottolinea selezione</button>
+  </div>
+  <div id="picked" class="picked empty">
+    <div class="picked-body"><small id="pickedRef">Selezione</small><span id="pickedText" class="picked-text">Nessun testo selezionato</span></div>
+    <button id="clearPicked" aria-label="Annulla la selezione">✕</button>
+  </div>
+  <div class="reading">
+    <div class="chapter-label"><b id="lblBook">GENESI</b> <span>·</span> CAPITOLO <b id="lblChapter">1</b> <span class="sample" id="sampleTag">TESTO DIMOSTRATIVO</span></div>
+    <div id="verses">
+      <p class="verse" data-v="1"><sup>1</sup> <span class="vt">Nel principio Dio creò i cieli e la terra.</span></p>
+      <p class="verse" data-v="2"><sup>2</sup> <span class="vt">La terra era informe e vuota, e le tenebre coprivano la faccia dell'abisso; e lo Spirito di Dio aleggiava sulla superficie delle acque.</span></p>
+      <p class="verse" data-v="3"><sup>3</sup> <span class="vt">E Dio disse: «Sia la luce!» E la luce fu.</span></p>
+      <p class="verse" data-v="4"><sup>4</sup> <span class="vt">Dio vide che la luce era buona; e Dio separò la luce dalle tenebre.</span></p>
+    </div>
+    <p id="noText" class="no-text" hidden></p>
+    <div class="hint" id="readingHint">Seleziona una parola o una frase nel testo, poi scegli “Sottolinea selezione”.</div>
+  </div>
+  <div class="panel">
+    <h3>Nota sul testo selezionato</h3>
+    <textarea id="verseNote" placeholder="Scrivi una riflessione, una domanda o un'applicazione..."></textarea>
+    <button class="primary" id="saveVerseNote">Salva appunto collegato al riferimento</button>
+  </div>
+</section>
+<section id="notes" class="page">
+  <div class="eyebrow">IL TUO STUDIO PERSONALE</div><h1>Appunti e sottolineature</h1>
+  <p class="muted">Le annotazioni salvate vengono raccolte qui e collegate al riferimento biblico.</p>
+  <div id="notesList" class="stack"></div>
+</section>
+<section id="commentary" class="page">
+  <div class="eyebrow">APPROFONDIMENTO</div><h1>Commentari</h1>
+  <p class="muted">Organizza commentari personali e importa documenti da consultare durante lo studio.</p>
+  <div class="panel">
+    <h3>Aggiungi un commentario</h3>
+    <label>Titolo<input id="commentTitle" placeholder="Es. Commentario al Vangelo di Giovanni"></label>
+    <label>Riferimento biblico<input id="commentRef" placeholder="Es. Giovanni 3:16 oppure intero libro"></label>
+    <label>File PDF o Word<input id="commentFile" type="file" accept=".pdf,.doc,.docx"></label>
+    <button class="primary" id="saveComment">Aggiungi alla biblioteca</button>
+    <p class="tiny">In questo prototipo del file viene registrato solo il nome: il documento non viene conservato né aperto dall'app.</p>
+  </div>
+  <div id="commentList" class="stack"></div>
+</section>
+<section id="sermons" class="page">
+  <div class="eyebrow">PREPARAZIONE DEI MESSAGGI</div><h1>Le mie predicazioni</h1>
+  <p class="muted">Crea un messaggio da una pagina vuota oppure usa una traccia guidata.</p>
+  <div class="toolbar"><button class="primary" id="newFree">＋ Predicazione libera</button><button id="newGuided">＋ Schema guidato</button></div>
+  <div class="panel" id="sermonEditor">
+    <div id="editState" class="edit-state" hidden></div>
+    <label>Titolo<input id="sermonTitle" placeholder="Titolo della predicazione"></label>
+    <label>Testo biblico di riferimento<input id="sermonRef" placeholder="Es. Romani 8:28-39"></label>
+    <div class="editor-grid">
+      <label>Introduzione<textarea id="sIntro" placeholder="Introduzione..."></textarea></label>
+      <label>Contesto biblico e storico<textarea id="sContext" placeholder="Contesto..."></textarea></label>
+      <label>Tema centrale<textarea id="sTheme" placeholder="Qual è il messaggio principale?"></textarea></label>
+      <label>Punti principali<textarea id="sPoints" placeholder="1. ...&#10;2. ...&#10;3. ..."></textarea></label>
+      <label>Illustrazioni e applicazioni<textarea id="sApply" placeholder="Esempi e applicazioni pratiche..."></textarea></label>
+      <label>Conclusione e appello<textarea id="sEnd" placeholder="Conclusione..."></textarea></label>
+    </div>
+    <div class="toolbar"><button class="primary" id="saveSermon">Salva predicazione</button><button id="exportSermon">Esporta in .txt</button></div>
+  </div>
+  <h3>Messaggi salvati</h3><div id="sermonList" class="stack"></div>
+</section>
+<section id="library" class="page">
+  <div class="eyebrow">RACCOLTA PERSONALE</div><h1>Archivio</h1>
+  <div class="stats"><div><strong id="nNotes">0</strong><span>Appunti</span></div><div><strong id="nSermons">0</strong><span>Predicazioni</span></div><div><strong id="nComments">0</strong><span>Commentari</span></div></div>
+  <div class="panel"><h3>Sincronizzazione tra dispositivi</h3><p>Questa prima versione salva i dati localmente. Per sincronizzarli tra telefono, tablet e computer occorre collegare un progetto cloud, creare l'accesso utente e applicare le regole di sicurezza.</p><span class="pill">Da configurare: account + cloud</span></div>
+  <div class="panel"><h3>Testo biblico</h3><p>Il testo mostrato è dimostrativo e non costituisce una Bibbia completa. Prima di pubblicare l'app bisogna scegliere un'edizione e verificare i relativi diritti di utilizzo.</p></div>
+</section>
+</main>
+</div>
+<footer>LA PAROLA · Prototipo installabile v2 · I dati sono salvati su questo dispositivo</footer>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+(function () {
+  "use strict";
+  const $ = id => document.getElementById(id);
+
+  /* ---------- Avvisi a schermo ---------- */
+  let toastTimer;
+  function toast(msg) {
+    const el = $("toast");
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
+  }
+
+  /* Conferma con un secondo tocco per le azioni che cancellano qualcosa. */
+  function confirmed(btn, question) {
+    if (btn.dataset.armed === "1") { disarm(btn); return true; }
+    btn.dataset.armed = "1";
+    btn.dataset.label = btn.textContent;
+    btn.textContent = question;
+    btn.classList.add("danger");
+    btn.armTimer = setTimeout(() => disarm(btn), 3500);
+    return false;
+  }
+  function disarm(btn) {
+    clearTimeout(btn.armTimer);
+    if (btn.dataset.armed !== "1") return;
+    btn.dataset.armed = "";
+    btn.textContent = btn.dataset.label;
+    btn.classList.remove("danger");
+  }
+
+  /* ---------- Archivio sul dispositivo ---------- */
+  const KEYS = { notes: "lp_notes", sermons: "lp_sermons", comments: "lp_comments" };
+  function load(key) {
+    try {
+      const value = JSON.parse(localStorage.getItem(key) || "[]");
+      return Array.isArray(value) ? value : [];
+    } catch (e) { return []; }
+  }
+  const data = { notes: load(KEYS.notes), sermons: load(KEYS.sermons), comments: load(KEYS.comments) };
+  function save(kind) {
+    try { localStorage.setItem(KEYS[kind], JSON.stringify(data[kind])); return true; }
+    catch (e) { toast("Salvataggio non riuscito: memoria del dispositivo piena o non disponibile."); return false; }
+  }
+  const today = () => new Date().toLocaleDateString("it-IT");
+  const esc = s => String(s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  /* ---------- Schede ---------- */
+  function showTab(name) {
+    document.querySelectorAll(".nav").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+    document.querySelectorAll(".page").forEach(p => p.classList.toggle("show", p.id === name));
+    const active = document.querySelector(".nav.active");
+    if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest", inline: "center" });
+    render();
+  }
+  document.querySelectorAll(".nav").forEach(b => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+  /* ---------- Bibbia: lettura, selezione, sottolineature e appunti ---------- */
+  const DEMO = { book: "Genesi", chapter: "1" };     // unico capitolo presente nel prototipo
+  const currentRef = () => $("book").value + " " + $("chapter").value;
+  let picked = null;                                  // ultima selezione fatta nel testo: { text, ref }
+
+  function updateReading() {
+    const hasText = $("book").value === DEMO.book && $("chapter").value === DEMO.chapter;
+    $("lblBook").textContent = $("book").value.toUpperCase();
+    $("lblChapter").textContent = $("chapter").value;
+    $("verses").hidden = !hasText;
+    $("sampleTag").hidden = !hasText;
+    $("readingHint").hidden = !hasText;
+    $("noText").hidden = hasText;
+    $("noText").textContent = "Il testo di " + currentRef() + " non è ancora incluso in questo prototipo.";
+    $("addMark").disabled = !hasText;
+    $("picked").hidden = !hasText;
+    clearPicked();
+  }
+  $("book").addEventListener("change", updateReading);
+  $("chapter").addEventListener("change", updateReading);
+
+  /* Legge la selezione corrente: testo pulito (senza numeri di versetto) e versetti toccati. */
+  function readSelection() {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) return null;
+    const range = sel.getRangeAt(0);
+    const parts = [], nums = [];
+    document.querySelectorAll("#verses .vt").forEach(span => {
+      const whole = document.createRange();
+      whole.selectNodeContents(span);
+      if (range.compareBoundaryPoints(Range.END_TO_START, whole) >= 0) return;   // inizia dopo questo versetto
+      if (range.compareBoundaryPoints(Range.START_TO_END, whole) <= 0) return;   // finisce prima di questo versetto
+      const part = document.createRange();
+      if (range.compareBoundaryPoints(Range.START_TO_START, whole) > 0) part.setStart(range.startContainer, range.startOffset);
+      else part.setStart(whole.startContainer, whole.startOffset);
+      if (range.compareBoundaryPoints(Range.END_TO_END, whole) < 0) part.setEnd(range.endContainer, range.endOffset);
+      else part.setEnd(whole.endContainer, whole.endOffset);
+      const text = part.toString().replace(/\s+/g, " ").trim();
+      if (text) { parts.push(text); nums.push(Number(span.parentElement.dataset.v)); }
+    });
+    if (!parts.length) return null;
+    const first = nums[0], last = nums[nums.length - 1];
+    return { text: parts.join(" "), ref: currentRef() + ":" + first + (last > first ? "-" + last : "") };
+  }
+  /* Sul telefono il tocco su un pulsante annulla la selezione: per questo l'ultima
+     selezione valida resta memorizzata (e visibile) finché non viene usata o annullata. */
+  document.addEventListener("selectionchange", () => {
+    if ($("verses").hidden) return;
+    let found = null;
+    try { found = readSelection(); } catch (e) {}
+    if (found) { picked = found; showPicked(); }
+  });
+  function showPicked() {
+    $("picked").classList.toggle("empty", !picked);
+    $("pickedRef").textContent = picked ? picked.ref : "Selezione";
+    $("pickedText").textContent = picked ? "«" + picked.text + "»" : "Nessun testo selezionato";
+  }
+  function clearPicked() {
+    picked = null;
+    showPicked();
+    const sel = window.getSelection();
+    if (sel && !sel.isCollapsed && $("verses").contains(sel.anchorNode)) sel.removeAllRanges();
+  }
+  $("clearPicked").addEventListener("click", clearPicked);
+
+  $("addMark").addEventListener("click", () => {
+    if (!picked) { toast("Seleziona prima una parola o una frase nel testo."); return; }
+    data.notes.unshift({ type: "Sottolineatura", ref: picked.ref, text: picked.text, comment: "", date: today() });
+    if (!save("notes")) { data.notes.shift(); return; }
+    toast("Sottolineatura salvata: " + picked.ref);
+    clearPicked();
+    render();
+  });
+  $("saveVerseNote").addEventListener("click", () => {
+    const text = $("verseNote").value.trim();
+    if (!text) { toast("Scrivi prima un appunto."); return; }
+    const note = { type: "Appunto", ref: picked ? picked.ref : currentRef(), text: text, comment: "", date: today() };
+    if (picked) note.quote = picked.text;
+    data.notes.unshift(note);
+    if (!save("notes")) { data.notes.shift(); return; }
+    $("verseNote").value = "";
+    toast("Appunto salvato: " + note.ref);
+    clearPicked();
+    render();
+  });
+
+  /* ---------- Commentari ---------- */
+  $("saveComment").addEventListener("click", () => {
+    const title = $("commentTitle").value.trim(), file = $("commentFile").files[0];
+    if (!title && !file) { toast("Inserisci un titolo o scegli un file."); return; }
+    data.comments.unshift({ title: title || file.name, ref: $("commentRef").value.trim(), file: file ? file.name : "", date: today() });
+    if (!save("comments")) { data.comments.shift(); return; }
+    $("commentTitle").value = ""; $("commentRef").value = ""; $("commentFile").value = "";
+    render();
+    toast(file ? "Voce aggiunta. Del file è stato registrato solo il nome." : "Voce aggiunta.");
+  });
+
+  /* ---------- Predicazioni ---------- */
+  const FIELDS = { title: "sermonTitle", ref: "sermonRef", intro: "sIntro", context: "sContext", theme: "sTheme", points: "sPoints", apply: "sApply", end: "sEnd" };
+  const HINTS_FREE = { sIntro: "Introduzione...", sContext: "Contesto...", sTheme: "Qual è il messaggio principale?", sPoints: "1. ...\n2. ...\n3. ...", sApply: "Esempi e applicazioni pratiche...", sEnd: "Conclusione..." };
+  const HINTS_GUIDED = { sIntro: "1. Introduzione e aggancio", sContext: "2. Contesto storico e biblico", sTheme: "3. Tema centrale", sPoints: "4. Punti principali e sottopunti", sApply: "5. Illustrazioni e applicazioni", sEnd: "6. Conclusione e appello" };
+  let editing = null;        // posizione, nell'elenco, della predicazione aperta in modifica
+  let cleanForm = "";        // contenuto dell'editor all'ultimo salvataggio o apertura
+
+  function readForm() {
+    const d = {};
+    for (const k in FIELDS) d[k] = $(FIELDS[k]).value;
+    return d;
+  }
+  function fillForm(s) {
+    for (const k in FIELDS) $(FIELDS[k]).value = (s && s[k]) || "";
+    cleanForm = JSON.stringify(readForm());
+  }
+  const formChanged = () => JSON.stringify(readForm()) !== cleanForm;
+  function setHints(hints) { for (const id in hints) $(id).placeholder = hints[id]; }
+  function setEditing(i) {
+    editing = i;
+    $("editState").hidden = i === null;
+    if (i !== null) $("editState").textContent = "In modifica: " + (data.sermons[i].title || "senza titolo");
+    $("saveSermon").textContent = i === null ? "Salva predicazione" : "Salva modifiche";
+  }
+  function newSermon(btn, guided) {
+    if (formChanged() && !confirmed(btn, "Scartare il testo non salvato?")) return;
+    fillForm(guided ? { title: "Nuova predicazione" } : null);
+    setHints(guided ? HINTS_GUIDED : HINTS_FREE);
+    setEditing(null);
+    $("sermonTitle").focus();
+  }
+  $("newFree").addEventListener("click", e => newSermon(e.currentTarget, false));
+  $("newGuided").addEventListener("click", e => newSermon(e.currentTarget, true));
+
+  $("saveSermon").addEventListener("click", () => {
+    const d = readForm();
+    if (!d.title.trim()) { toast("Inserisci il titolo della predicazione."); $("sermonTitle").focus(); return; }
+    d.date = today();
+    const before = data.sermons.slice();
+    if (editing !== null && data.sermons[editing]) data.sermons[editing] = d;
+    else data.sermons.unshift(d);
+    if (!save("sermons")) { data.sermons = before; return; }     // il testo resta nell'editor
+    fillForm(null);
+    setEditing(null);
+    render();
+    toast("Predicazione salvata.");
+  });
+
+  function sermonText(s) {
+    return (s.title || "") + "\nRiferimento: " + (s.ref || "") +
+      "\n\nINTRODUZIONE\n" + (s.intro || "") + "\n\nCONTESTO\n" + (s.context || "") +
+      "\n\nTEMA CENTRALE\n" + (s.theme || "") + "\n\nPUNTI PRINCIPALI\n" + (s.points || "") +
+      "\n\nAPPLICAZIONI\n" + (s.apply || "") + "\n\nCONCLUSIONE\n" + (s.end || "") + "\n";
+  }
+  function download(name, text) {
+    const safe = String(name || "").replace(/[^\p{L}\p{N} ._-]/gu, "_").trim() || "predicazione";
+    const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = safe + ".txt";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
+  }
+  $("exportSermon").addEventListener("click", () => { const d = readForm(); download(d.title, sermonText(d)); });
+
+  /* ---------- Elenchi ---------- */
+  const delButton = (kind, i) => '<button data-act="del" data-kind="' + kind + '" data-i="' + i + '">Elimina</button>';
+  function render() {
+    $("notesList").innerHTML = data.notes.map((n, i) =>
+      '<div class="item"><strong>' + esc(n.type) + " · " + esc(n.ref) + "</strong>" +
+      (n.quote ? '<p class="quote">«' + esc(n.quote) + "»</p>" : "") +
+      "<p>" + esc(n.text) + "</p><small>" + esc(n.date) + "</small><br>" + delButton("notes", i) + "</div>"
+    ).join("") || '<p class="muted">Non hai ancora salvato appunti.</p>';
+    $("commentList").innerHTML = data.comments.map((c, i) =>
+      '<div class="item"><strong>' + esc(c.title) + "</strong><p>" + esc(c.ref || "Nessun riferimento") + " · " +
+      esc(c.file || "Commentario personale") + "</p><small>" + esc(c.date) + "</small><br>" + delButton("comments", i) + "</div>"
+    ).join("") || '<p class="muted">La tua biblioteca dei commentari è vuota.</p>';
+    $("sermonList").innerHTML = data.sermons.map((s, i) =>
+      '<div class="item"><strong>' + esc(s.title) + "</strong><p>" + esc(s.ref || "Nessun riferimento") + " · " + esc(s.date) + "</p>" +
+      '<button data-act="edit" data-i="' + i + '">Apri e modifica</button>' + delButton("sermons", i) +
+      '<button data-act="export" data-i="' + i + '">Esporta .txt</button></div>'
+    ).join("") || '<p class="muted">Non hai ancora creato predicazioni.</p>';
+    $("nNotes").textContent = data.notes.length;
+    $("nSermons").textContent = data.sermons.length;
+    $("nComments").textContent = data.comments.length;
+  }
+  document.addEventListener("click", e => {
+    const btn = e.target.closest ? e.target.closest("button[data-act]") : null;
+    if (!btn) return;
+    const i = Number(btn.dataset.i), act = btn.dataset.act;
+    if (act === "del") {
+      if (!confirmed(btn, "Tocca di nuovo per eliminare")) return;
+      const kind = btn.dataset.kind;
+      data[kind].splice(i, 1);
+      save(kind);
+      if (kind === "sermons" && editing !== null) {
+        if (editing === i) setEditing(null);          // il testo resta nell'editor come nuova predicazione
+        else if (editing > i) editing -= 1;
+      }
+      render();
+    } else if (act === "edit") {
+      if (formChanged() && !confirmed(btn, "Scartare il testo non salvato?")) return;
+      fillForm(data.sermons[i]);
+      setEditing(i);
+      $("sermonEditor").scrollIntoView({ block: "start", behavior: "smooth" });
+    } else if (act === "export") {
+      download(data.sermons[i].title, sermonText(data.sermons[i]));
+    }
+  });
+
+  /* ---------- Avvio ---------- */
+  fillForm(null);
+  updateReading();
+  render();
+
+  /* ---------- Installazione (PWA) ---------- */
+  let installPrompt = null;
+  const installBtn = $("installApp");
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    installPrompt = e;
+    installBtn.hidden = false;
+  });
+  installBtn.addEventListener("click", async () => {
+    if (!installPrompt) { toast("Apri il menu ⋮ del browser e scegli «Installa app»."); return; }
+    installPrompt.prompt();
+    try { await installPrompt.userChoice; } catch (e) {}
+    installPrompt = null;
+    installBtn.hidden = true;
+  });
+  window.addEventListener("appinstalled", () => { installBtn.hidden = true; });
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(() => {}));
+  }
+})();
+</script>
+</body>
+</html>
