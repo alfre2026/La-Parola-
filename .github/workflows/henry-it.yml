@@ -1,0 +1,129 @@
+# Matthew Henry, Commentary on the Whole Bible: traduzione automatica in italiano.
+# Si avvia quando cambia tools/henry/run.txt («mode=pilot» per una prova, «mode=full chunks=20» per tutto)
+# e scrive mh/it/<LIBRO>.json (oppure tools/henry/pilot.json) nello stesso ramo.
+name: Matthew Henry in italiano
+on:
+  push:
+    branches: ['claude/**']
+    paths: ['tools/henry/run.txt']
+permissions:
+  contents: write
+concurrency:
+  group: henry-it-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  DATASET_COMMIT: 59b152cd125fdd3ab20522debde033bef09162fa
+  MODEL: Helsinki-NLP/opus-mt-tc-big-en-it
+  CACHE_KEY: ct2-opus-mt-tc-big-en-it-int8-v1
+  PILOT_UNITS: 'JHN.3 GEN.1 PSA.23 ROM.8 1CO.13'
+jobs:
+  prep:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    outputs:
+      mode: ${{ steps.plan.outputs.mode }}
+      n: ${{ steps.plan.outputs.n }}
+      chunks: ${{ steps.plan.outputs.chunks }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - id: plan
+        run: |
+          MODE=$(grep -oP 'mode=\K\w+' tools/henry/run.txt || echo pilot)
+          N=$(grep -oP 'chunks=\K\d+' tools/henry/run.txt || echo 20)
+          [ "$MODE" = pilot ] && N=1
+          echo "mode=$MODE" >> "$GITHUB_OUTPUT"
+          echo "n=$N" >> "$GITHUB_OUTPUT"
+          echo "chunks=$(python -c "import json;print(json.dumps(list(range($N))))")" >> "$GITHUB_OUTPUT"
+      - name: Testo inglese (CrossWire MHC, da samueldotj/bible-commentaries)
+        run: |
+          git clone --filter=blob:none --no-checkout https://github.com/samueldotj/bible-commentaries ds
+          cd ds && git sparse-checkout set --no-cone /en/henry/ && git checkout "$DATASET_COMMIT"
+      - run: python tools/henry/build.py ds/en/henry /tmp/en --segs work/segs.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: segs
+          path: work/segs.json
+          retention-days: 3
+      - id: cache
+        uses: actions/cache@v4
+        with:
+          path: ct2
+          key: ${{ env.CACHE_KEY }}
+      - name: Modello OPUS-MT per CTranslate2
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          pip install --quiet ctranslate2 sentencepiece transformers sacremoses torch --extra-index-url https://download.pytorch.org/whl/cpu
+          ct2-transformers-converter --model "$MODEL" --output_dir ct2 --quantization int8 --copy_files source.spm target.spm
+          ls -la ct2
+
+  tr:
+    needs: prep
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        k: ${{ fromJSON(needs.prep.outputs.chunks) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/cache/restore@v4
+        with:
+          path: ct2
+          key: ${{ env.CACHE_KEY }}
+          fail-on-cache-miss: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: segs
+          path: work
+      - run: pip install --quiet ctranslate2 sentencepiece
+      - name: Traduzione
+        run: |
+          if [ "${{ needs.prep.outputs.mode }}" = pilot ]; then ONLY=(--only "$PILOT_UNITS"); else ONLY=(); fi
+          python tools/henry/translate.py work/segs.json ct2 ${{ matrix.k }} ${{ needs.prep.outputs.n }} out/chunk-${{ matrix.k }}.json "${ONLY[@]}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chunk-${{ matrix.k }}
+          path: out/
+          retention-days: 3
+
+  collect:
+    needs: [prep, tr]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: segs
+          path: work
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: chunk-*
+          path: out
+          merge-multiple: true
+      - name: File per l'app
+        run: |
+          if [ "${{ needs.prep.outputs.mode }}" = pilot ]; then
+            python tools/henry/collect.py work/segs.json out mh/it --pilot tools/henry/pilot.json
+            git add tools/henry/pilot.json
+          else
+            python tools/henry/collect.py work/segs.json out mh/it
+            python tools/henry/fix_it.py mh/en mh/it
+            git add mh/it
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Matthew Henry: traduzione italiana automatica (${{ needs.prep.outputs.mode }})"
+          for i in 1 2 3; do git pull --rebase && git push && break; sleep 5; done
