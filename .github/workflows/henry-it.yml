@@ -121,7 +121,8 @@ jobs:
           else
             python tools/henry/collect.py work/segs.json out mh/it
             python tools/henry/fix_it.py mh/en mh/it
-            git add mh/it
+            python tools/henry/version.py mh
+            git add mh
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
