@@ -120,6 +120,7 @@ jobs:
             git add tools/henry/pilot.json
           else
             python tools/henry/collect.py work/segs.json out mh/it
+            python tools/henry/fix_it.py mh/en mh/it
             git add mh/it
           fi
           git config user.name "github-actions[bot]"

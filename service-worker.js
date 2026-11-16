@@ -41,6 +41,8 @@ self.addEventListener("fetch", event => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
+  // Commentario di Matthew Henry (mh/...): lo conserva l'app in IndexedDB, qui non si duplica.
+  if (url.pathname.includes("/mh/")) return;
   const key = url.origin + url.pathname;
   const isPage = req.mode === "navigate" || url.pathname.endsWith("/index.html");
 
