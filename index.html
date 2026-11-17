@@ -383,8 +383,9 @@ function closeAll() { const n = layers.length; if (!n) return; while (layers.len
 addEventListener('popstate', e => { const l = (e.state && e.state.l) || 0; while (layers.length > l) layers.pop().remove(); });
 /* ============ lettore ============ */
 const ACT = {};
-const COLORS = [['Limone', '#FFF2A8'], ['Albicocca', '#FFD8A8'], ['Salmone', '#FFB9B0'], ['Rosa', '#FFC4E1'], ['Glicine', '#E6C9FF'], ['Pervinca', '#C7C9FF'],
-  ['Cielo', '#BEDFFF'], ['Acqua', '#B5EEF0'], ['Menta', '#BFF0D0'], ['Pistacchio', '#D5EFA8'], ['Sabbia', '#F1E0BD'], ['Perla', '#D9D9DE']];
+/* tinte pastello «carta»: più velate, meno sature (niente effetto fluo sul fondo crema). Il dato salva l'indice, quindi cambiare i valori recolora anche le evidenziazioni esistenti */
+const COLORS = [['Limone', '#EFE4A6'], ['Albicocca', '#F0D0A8'], ['Salmone', '#E9BDB2'], ['Rosa', '#E8C6D4'], ['Glicine', '#D9C8E3'], ['Pervinca', '#C8CBE5'],
+  ['Cielo', '#BCD4E5'], ['Acqua', '#B8DCDA'], ['Menta', '#C2DCC9'], ['Pistacchio', '#D0DFB2'], ['Sabbia', '#E6D8BA'], ['Perla', '#D8D8DB']];
 const S = { tab: 'read', bk: 42, ch: 3, sel: null, pick: null, extend: false };
 const words = t => (t || '').match(/\S+\s*/g) || [];
 const hkey = (bk, ch, v) => `${BID}|${bk}|${ch}|${v}`;
@@ -802,13 +803,13 @@ function inkStroke(svg, x, y, w, h, fs, color, seed) {
   }
   const pts = T.concat(B.reverse()), d = 'M' + pts.map(p => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('L') + 'Z';
   const g = document.createElementNS(NS, 'g'); g.setAttribute('filter', 'url(#inkrough)');
-  const path = document.createElementNS(NS, 'path'); path.setAttribute('d', d); path.setAttribute('fill', color); path.setAttribute('fill-opacity', (0.78 + r() * 0.08).toFixed(2));
-  path.setAttribute('stroke', color); path.setAttribute('stroke-opacity', '0.55'); path.setAttribute('stroke-width', '1.6'); path.setAttribute('stroke-linejoin', 'round');
+  const path = document.createElementNS(NS, 'path'); path.setAttribute('d', d); path.setAttribute('fill', color); path.setAttribute('fill-opacity', (0.62 + r() * 0.1).toFixed(2));
+  path.setAttribute('stroke', color); path.setAttribute('stroke-opacity', '0.3'); path.setAttribute('stroke-width', '1.6'); path.setAttribute('stroke-linejoin', 'round');
   g.appendChild(path);
   /* inchiostro che si accumula dove il pennarello si ferma: leggero scurimento alle due estremità */
   [[x0 + slant * 0.5 + 2, 1], [x1 - 2, 1]].forEach(([ex]) => {
     const e = document.createElementNS(NS, 'ellipse'); e.setAttribute('cx', ex.toFixed(1)); e.setAttribute('cy', cy.toFixed(1)); e.setAttribute('rx', (th * 0.22).toFixed(1)); e.setAttribute('ry', (th * 0.46).toFixed(1));
-    e.setAttribute('fill', color); e.setAttribute('fill-opacity', '0.28'); g.appendChild(e);
+    e.setAttribute('fill', color); e.setAttribute('fill-opacity', '0.2'); g.appendChild(e);
   });
   svg.appendChild(g);
 }
