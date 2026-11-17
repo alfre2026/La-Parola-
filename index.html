@@ -384,8 +384,8 @@ addEventListener('popstate', e => { const l = (e.state && e.state.l) || 0; while
 /* ============ lettore ============ */
 const ACT = {};
 /* tinte pastello «carta»: più velate, meno sature (niente effetto fluo sul fondo crema). Il dato salva l'indice, quindi cambiare i valori recolora anche le evidenziazioni esistenti */
-const COLORS = [['Limone', '#EFE4A6'], ['Albicocca', '#F0D0A8'], ['Salmone', '#E9BDB2'], ['Rosa', '#E8C6D4'], ['Glicine', '#D9C8E3'], ['Pervinca', '#C8CBE5'],
-  ['Cielo', '#BCD4E5'], ['Acqua', '#B8DCDA'], ['Menta', '#C2DCC9'], ['Pistacchio', '#D0DFB2'], ['Sabbia', '#E6D8BA'], ['Perla', '#D8D8DB']];
+const COLORS = [['Limone', '#F8EDAA'], ['Albicocca', '#FBD9AE'], ['Salmone', '#F7C2B5'], ['Rosa', '#F6C7DC'], ['Glicine', '#E3CCF5'], ['Pervinca', '#CDD1FA'],
+  ['Cielo', '#C0E0FA'], ['Acqua', '#BDEBEA'], ['Menta', '#C6EED2'], ['Pistacchio', '#D8F0B0'], ['Sabbia', '#F3E2BC'], ['Perla', '#E2E2E8']];
 const S = { tab: 'read', bk: 42, ch: 3, sel: null, pick: null, extend: false };
 const words = t => (t || '').match(/\S+\s*/g) || [];
 const hkey = (bk, ch, v) => `${BID}|${bk}|${ch}|${v}`;
