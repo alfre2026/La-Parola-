@@ -128,6 +128,9 @@ label.l{display:block;font-size:13px;color:var(--mute);margin:12px 0 5px;font-we
 .bkgrid button{text-align:left;padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:var(--card);font-size:15px}
 .chgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
 .chgrid button{padding:12px 0;border-radius:11px;border:1px solid var(--line);background:var(--card);font-weight:600}
+.hist{display:grid;gap:6px}
+.hist button{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 12px;border-radius:11px;border:1px solid var(--line);background:var(--card);font-size:15px;text-align:left}
+.hist small{color:var(--mute);font-size:12px;white-space:nowrap}
 .sech{font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--mute);margin:16px 2px 8px;font-weight:700}
 .lg{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:center;margin:6px 0}
 .lg i{width:22px;height:22px;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.2)}
@@ -347,7 +350,7 @@ const KV = {
   }
 };
 /* dati utente */
-let D = { settings: { size: 19, theme: 'carta', bible: null, last: { bk: 42, ch: 3 }, legend: {} }, hl: {}, notes: [], marks: {}, sermons: [], bibles: [] };
+let D = { settings: { size: 19, theme: 'carta', bible: null, last: { bk: 42, ch: 3 }, legend: {} }, hl: {}, notes: [], marks: {}, sermons: [], bibles: [], history: [] };
 let C = { list: [] };           /* commentari */
 let BIBLE = null;               /* testo attivo: array di 66 {chapters:[[versi]]} */
 let BID = null;                 /* id versione attiva */
@@ -468,10 +471,14 @@ function patchVerses(list) {
 }
 function prevCh() { if (S.ch > 1) return [S.bk, S.ch - 1]; for (let b = S.bk - 1; b >= 0; b--) if (hasBook(b)) return [b, nCh(b)]; return null; }
 function nextCh() { if (S.ch < nCh(S.bk)) return [S.bk, S.ch + 1]; for (let b = S.bk + 1; b < 66; b++) if (hasBook(b)) return [b, 1]; return null; }
+/* cronologia: i capitoli consultati, dal più recente; ogni capitolo compare una volta sola */
+function addHist(bk, ch) {
+  D.history = [{ bk, ch, ts: Date.now() }, ...(D.history || []).filter(h => h.bk !== bk || h.ch !== ch)].slice(0, 60);
+}
 function goto(bk, ch, v) {
   if (!BIBLE) return toast('Installa prima una Bibbia');
   closeAll(); clearSel();
-  S.bk = bk; S.ch = Math.max(1, Math.min(ch, nCh(bk) || 1)); D.settings.last = { bk: S.bk, ch: S.ch }; save();
+  S.bk = bk; S.ch = Math.max(1, Math.min(ch, nCh(bk) || 1)); D.settings.last = { bk: S.bk, ch: S.ch }; addHist(S.bk, S.ch); save();
   setTab('read'); renderReader();
   if (v) { const e = $(`#text .vs[data-v="${v}"]`); if (e) { setTimeout(() => { e.scrollIntoView({ block: 'center' }); e.classList.add('flash'); }, 30); return; } }
   scrollTo(0, 0);
@@ -667,7 +674,7 @@ function openNoteLayer(ctx) {
     let q = ''; for (let v = ref.v1; v <= Math.min(ref.v2, ref.v1 + 5); v++) q += `<sup>${v}</sup>${esc(verseTxt(ref.bk, ref.c1, v))} `;
     const quote = `<div class="vquote" style="font-size:15px">${q}${ref.v2 - ref.v1 > 5 ? '…' : ''}</div>`;
     if (c.editing || !n) return `<h2 class="t"><span class="ref">${esc(refLabel(ref))}</span> · nota</h2>${quote}<textarea id="noteTx" class="hand" placeholder="Scrivi la tua nota…" autofocus>${esc(n ? n.text : '')}</textarea><div class="row" style="margin-top:12px"><button class="btn" data-act="notesave">${ic('check')} Salva</button><button class="btn sec" data-act="${n ? 'noteview' : 'close'}">Annulla</button></div>`;
-    return `<h2 class="t"><span class="ref">${esc(refLabel(ref))}</span> · nota <span class="mut">${fmtDate(n.ts)}</span></h2>${quote}<div class="slip hand">${esc(n.text)}</div><div class="row w" style="margin-top:14px"><button class="btn sec" data-act="noteedit">${ic('pen')} Modifica</button><button class="btn sec" data-act="notegoto" data-bk="${n.bk}" data-c="${n.ch}" data-v="${n.v1}">${ic('book')} Vai al versetto</button><button class="btn sec" data-act="notedel">${ic('trash')} Elimina</button></div>`;
+    return `<h2 class="t"><span class="ref">${esc(refLabel(ref))}</span> · nota <span class="mut">${fmtDate(n.ts)}</span></h2>${quote}<div class="slip hand">${linkRefs(esc(n.text))}</div><div class="row w" style="margin-top:14px"><button class="btn sec" data-act="noteedit">${ic('pen')} Modifica</button><button class="btn sec" data-act="notegoto" data-bk="${n.bk}" data-c="${n.ch}" data-v="${n.v1}">${ic('book')} Vai al versetto</button><button class="btn sec" data-act="notedel">${ic('trash')} Elimina</button></div>`;
   }, { ctx });
 }
 ACT.note = el => {
@@ -842,7 +849,8 @@ function pkRender(d) {
   const nq = norm(q).replace(/[\s.]/g, '');
   const list = BOOKS.map((b, i) => i).filter(i => hasBook(i) && (!nq || norm(BOOKS[i].n).replace(/\s/g, '').includes(nq) || BOOKS[i].a.some(a => a.startsWith(nq))));
   const sec = (t, a, b) => { const l = list.filter(i => i >= a && i < b); return l.length ? `<div class="sech" style="padding:0 14px">${t}</div><div class="bkgrid" style="padding:0 14px">${l.map(i => `<button data-act="pkbook" data-bk="${i}">${esc(BOOKS[i].n)}</button>`).join('')}</div>` : ''; };
-  box.innerHTML = top + (BIBLE ? sec('Antico Testamento', 0, 39) + sec('Nuovo Testamento', 39, 66) : '<div class="empty">Nessuna Bibbia installata.</div>');
+  const hist = !q && D.history.length ? `<div class="sech" style="padding:0 14px">Cronologia · dal più recente</div><div class="hist" style="padding:0 14px">${D.history.map(h => `<button data-act="gov" data-bk="${h.bk}" data-c="${h.ch}" data-v="0"><span>${esc(BOOKS[h.bk].n)} ${h.ch}</span><small>${new Date(h.ts).toLocaleString('it-IT', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</small></button>`).join('')}</div>` : '';
+  box.innerHTML = top + hist + (BIBLE ? sec('Antico Testamento', 0, 39) + sec('Nuovo Testamento', 39, 66) : '<div class="empty">Nessuna Bibbia installata.</div>');
 }
 ACT.pkbook = (el, e, d) => { d.ctx.mode = 'chapters'; d.ctx.bk = +el.dataset.bk; pkRender(d); };
 ACT.pkback = (el, e, d) => { d.ctx.mode = 'books'; pkRender(d); };
