@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: false
 env:
   DATASET_COMMIT: 59b152cd125fdd3ab20522debde033bef09162fa
-  CLAUDE_MODEL: claude-sonnet-5-5
-  MAX_USD: '120'
+  CLAUDE_MODEL: claude-haiku-5-5
+  MAX_USD: '15'
 jobs:
   run:
     runs-on: ubuntu-latest
