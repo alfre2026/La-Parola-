@@ -383,9 +383,10 @@ function closeAll() { const n = layers.length; if (!n) return; while (layers.len
 addEventListener('popstate', e => { const l = (e.state && e.state.l) || 0; while (layers.length > l) layers.pop().remove(); });
 /* ============ lettore ============ */
 const ACT = {};
-/* tinte pastello «carta»: più velate, meno sature (niente effetto fluo sul fondo crema). Il dato salva l'indice, quindi cambiare i valori recolora anche le evidenziazioni esistenti */
-const COLORS = [['Limone', '#F8EDAA'], ['Albicocca', '#FBD9AE'], ['Salmone', '#F7C2B5'], ['Rosa', '#F6C7DC'], ['Glicine', '#E3CCF5'], ['Pervinca', '#CDD1FA'],
-  ['Cielo', '#C0E0FA'], ['Acqua', '#BDEBEA'], ['Menta', '#C6EED2'], ['Pistacchio', '#D8F0B0'], ['Sabbia', '#F3E2BC'], ['Perla', '#E2E2E8']];
+const APP_VER = 'v 2.1';
+/* tinte pastello «carta»: accese ma morbide, non fluo (sul fondo crema). Il dato salva l'indice, quindi cambiare i valori recolora anche le evidenziazioni esistenti */
+const COLORS = [['Limone', '#FBEB7A'], ['Albicocca', '#FFC98A'], ['Salmone', '#FFA89A'], ['Rosa', '#FF9FC8'], ['Glicine', '#CFA6F0'], ['Pervinca', '#A9B0F5'],
+  ['Cielo', '#94CBF7'], ['Acqua', '#8EE3E0'], ['Menta', '#9EE8B8'], ['Pistacchio', '#C4EA7E'], ['Sabbia', '#EED49A'], ['Perla', '#C9C9D3']];
 const S = { tab: 'read', bk: 42, ch: 3, sel: null, pick: null, extend: false };
 const words = t => (t || '').match(/\S+\s*/g) || [];
 const hkey = (bk, ch, v) => `${BID}|${bk}|${ch}|${v}`;
@@ -973,7 +974,7 @@ function renderMe() {
   if (M.sub === 'data') {
     h += `<div class="sech" style="padding:0 14px">Versioni della Bibbia</div>` + (D.bibles.length ? D.bibles.map(b => `<div class="card"><div class="row"><b style="flex:1">${esc(b.name)}</b>${b.id === BID ? '<span class="badge">attiva</span>' : `<button class="btn sec sm" data-act="bact" data-id="${b.id}">Attiva</button>`}<button class="ib" data-act="bdel" data-id="${b.id}" aria-label="Elimina">${ic('trash')}</button></div></div>`).join('') : '<div class="empty" style="padding:10px">Nessuna versione installata.</div>') +
       `<div class="card"><div class="row w"><button class="btn sm" data-act="dlrived">${ic('down2')} Scarica Riveduta 2020</button><button class="btn sec sm" data-act="impbible">${ic('up2')} Importa file</button></div><div class="mut" style="margin-top:8px">Per la <b>Nuova Riveduta 2006</b> importa un tuo file: JSON (come la Riveduta) oppure testo con un versetto per riga, nel formato «Giovanni 3:16 testo…».</div></div>
-      <div class="sech" style="padding:0 14px">Backup</div><div class="card"><div class="row w"><button class="btn sec sm" data-act="bkexp">${ic('down2')} Scarica backup</button><button class="btn sec sm" data-act="bkimp">${ic('up2')} Ripristina</button></div><div class="mut" style="margin-top:8px">Il backup contiene evidenziazioni, note, segnalibri, sermoni e commentari (non il testo biblico). ${D.notes.length} note · ${Object.keys(D.hl).length} versetti evidenziati · ${D.sermons.length} sermoni · ${C.list.length} commentari.</div></div>`;
+      <div class="sech" style="padding:0 14px">Backup</div><div class="card"><div class="row w"><button class="btn sec sm" data-act="bkexp">${ic('down2')} Scarica backup</button><button class="btn sec sm" data-act="bkimp">${ic('up2')} Ripristina</button></div><div class="mut" style="margin-top:8px">Il backup contiene evidenziazioni, note, segnalibri, sermoni e commentari (non il testo biblico). ${D.notes.length} note · ${Object.keys(D.hl).length} versetti evidenziati · ${D.sermons.length} sermoni · ${C.list.length} commentari.</div></div><div class="mut" style="padding:0 14px 18px;font-size:13px">La Parola · ${APP_VER}</div>`;
   }
   v.innerHTML = h;
   lazyInk(v);
