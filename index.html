@@ -123,7 +123,7 @@ label.l{display:block;font-size:13px;color:var(--mute);margin:12px 0 5px;font-we
 /* forbice davanti a ogni «.» che apre una frase: stacca da lì un nuovo punto. Sta dentro la riga (non cambia l'altezza delle righe); l'area di tocco è più grande (::before) */
 .pt .tx .cutw{white-space:nowrap}
 .pt .tx .cut{position:relative;display:inline-block;width:24px;height:20px;margin-right:2px;vertical-align:-3px;color:var(--acc)}
-.pt .tx .cut svg.i{position:absolute;left:3px;top:1px;width:18px;height:18px;opacity:.7}
+.pt .tx .cut svg.i{position:absolute;left:3px;top:1px;width:18px;height:18px;opacity:.9}
 .pt .tx .cut::before{content:'';position:absolute;left:-6px;right:-4px;top:-8px;bottom:-8px;border-radius:9px}
 .pt .tx .cut:active::before{background:var(--accsoft)}
 .pt.newpt{animation:np 1.8s ease-out}
@@ -392,7 +392,7 @@ function closeAll() { const n = layers.length; if (!n) return; while (layers.len
 addEventListener('popstate', e => { const l = (e.state && e.state.l) || 0; while (layers.length > l) layers.pop().remove(); });
 /* ============ lettore ============ */
 const ACT = {};
-const APP_VER = 'v 2.2';
+const APP_VER = 'v 2.3';
 /* tinte pastello «carta»: accese ma morbide, non fluo (sul fondo crema). Il dato salva l'indice, quindi cambiare i valori recolora anche le evidenziazioni esistenti */
 const COLORS = [['Limone', '#FBEB7A'], ['Albicocca', '#FFC98A'], ['Salmone', '#FFA89A'], ['Rosa', '#FF9FC8'], ['Glicine', '#CFA6F0'], ['Pervinca', '#A9B0F5'],
   ['Cielo', '#94CBF7'], ['Acqua', '#8EE3E0'], ['Menta', '#9EE8B8'], ['Pistacchio', '#C4EA7E'], ['Sabbia', '#EED49A'], ['Perla', '#C9C9D3']];
@@ -1078,15 +1078,21 @@ ACT.ptdel = (el, e, d) => { if (!confirmed(el, 'Sicuro?')) return; const s = sd(
 const mv = (d, id, dir) => { const a = sd(d).points, i = a.findIndex(p => p.id === id), j = i + dir; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; touchS(sd(d)); refreshLayer(d); };
 /* divisione di un punto: si può staccare un nuovo punto da ogni frase che inizia con «.» —
    a inizio riga («. Il re Davide…», anche rientrata o «.Il re…») oppure nel mezzo della riga se staccato da spazi («… Giovanni . Rimando…»).
-   Non i puntini di sospensione, non il punto finale di una frase, non la prima frase del punto */
+   Non i puntini di sospensione, non il punto finale di una frase, non la prima frase del punto.
+   A inizio riga valgono anche • · ․; si tollerano spazi unificatori e caratteri invisibili (testo incollato da altre app) e ogni tipo di a capo */
+const CUT_RE = (() => {
+  const S = '[^\\S\\n\\r\\u2028\\u2029]|[\\u200b-\\u200f\\u2060]';   /* spazio che non va a capo, o carattere invisibile */
+  return new RegExp(`(?<=(?:^|[\\n\\r\\u2028\\u2029])(?:${S})*)[.\\u2024\\u2022\\u00b7](?=(?:${S})*[^\\s.\\u2024\\u2022\\u00b7\\u200b-\\u200f\\u2060])|(?<=[^\\S\\n\\r\\u2028\\u2029])\\.(?=(?:${S})+[^\\s.\\u200b-\\u200f\\u2060])`, 'g');
+})();
 function cutPts(t) {
-  const r = [], re = /(?<=(?:^|\n)[ \t]*)\.(?=[ \t]*[^\s.])|(?<=[ \t])\.(?=[ \t]+[^\s.])/g, f = t.search(/\S/); let m;
-  while ((m = re.exec(t))) if (m.index > f) r.push(m.index);
+  const r = [], f = t.search(/[^\s\u200b-\u200f\u2060]/); let m;
+  CUT_RE.lastIndex = 0;
+  while ((m = CUT_RE.exec(t))) if (m.index > f) r.push(m.index);
   return r;
 }
 function cutHtml(p) {
   const t = p.text; let h = '', a = 0;
-  for (const k of cutPts(t)) { h += esc(t.slice(a, k)) + `<span class="cutw"><button class="cut" data-act="ptcut" data-id="${p.id}" data-at="${k}" aria-label="Nuovo punto da qui">${ic('cut')}</button>.</span>`; a = k + 1; }
+  for (const k of cutPts(t)) { h += esc(t.slice(a, k)) + `<span class="cutw"><button class="cut" data-act="ptcut" data-id="${p.id}" data-at="${k}" aria-label="Nuovo punto da qui">${ic('cut')}</button>${esc(t[k])}</span>`; a = k + 1; }
   return h + esc(t.slice(a));
 }
 /* il testo da quel «.» in poi diventa un nuovo punto subito sotto; i versetti restano nel punto di partenza */
@@ -1610,9 +1616,22 @@ function migrateLegacy() {
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(() => {}));
   /* il service worker apre subito la copia salvata e scarica in sottofondo la versione nuova: qui si avvisa */
-  navigator.serviceWorker.addEventListener('message', e => {
-    if (e.data && e.data.type === 'update') toastAction('Nuova versione pronta · tocca per aggiornare', async () => { try { await KV.set('data', D); } catch (er) {} location.reload(); });
-  });
+  navigator.serviceWorker.addEventListener('message', e => { if (e.data && e.data.type === 'update') offerUpdate(); });
+  /* sul telefono l'app resta aperta in sottofondo e non si ricarica: quando torna in primo piano si controlla (al massimo una volta al minuto) */
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && Date.now() - _updT >= 60000) checkUpdate(); });
+}
+/* chiede index.html: il service worker scarica la versione pubblicata (e avvisa se è cambiata); se la copia salvata è già più nuova di questa pagina, si avvisa subito */
+let _updT = Date.now();
+async function checkUpdate() {
+  _updT = Date.now();
+  try { const m = (await (await fetch('./index.html', { cache: 'no-cache' })).text()).match(/const APP_VER = '(v [^']*)'/); if (m && m[1] !== APP_VER) offerUpdate(); } catch (e) {}
+}
+function offerUpdate() {
+  toastAction('Nuova versione pronta · tocca per aggiornare', async () => {
+    /* non si ricarica con un testo scritto e non ancora salvato (punto del sermone, nota…) */
+    if ([...document.querySelectorAll('#layers textarea, #layers input[type=text]')].some(x => x.value !== x.defaultValue)) return toast('Prima salva il testo che stai scrivendo, poi aggiorna');
+    try { await KV.set('data', D); } catch (er) {} location.reload();
+  }, 20000);
 }
 
 /* ============ avvio ============ */
