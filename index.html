@@ -120,6 +120,14 @@ label.l{display:block;font-size:13px;color:var(--mute);margin:12px 0 5px;font-we
 .hand,.pt .tx,#pttx,#noteTx{font-family:var(--hand);color:var(--pen);font-size:21px;line-height:34px;-webkit-font-smoothing:antialiased}
 .pt .tx{white-space:pre-wrap;margin:6px 0 10px;padding-top:1px;background:repeating-linear-gradient(transparent 0 33px,rgba(70,90,140,.20) 33px 34px)}
 .dark .pt .tx{font-size:calc(var(--fs) + 3px);line-height:38px;background:none;color:#e9dcc0}
+/* forbice davanti a ogni «.» che apre una frase: stacca da lì un nuovo punto. Sta dentro la riga (non cambia l'altezza delle righe); l'area di tocco è più grande (::before) */
+.pt .tx .cutw{white-space:nowrap}
+.pt .tx .cut{position:relative;display:inline-block;width:24px;height:20px;margin-right:2px;vertical-align:-3px;color:var(--acc)}
+.pt .tx .cut svg.i{position:absolute;left:3px;top:1px;width:18px;height:18px;opacity:.7}
+.pt .tx .cut::before{content:'';position:absolute;left:-6px;right:-4px;top:-8px;bottom:-8px;border-radius:9px}
+.pt .tx .cut:active::before{background:var(--accsoft)}
+.pt.newpt{animation:np 1.8s ease-out}
+@keyframes np{0%,35%{background:var(--flash)}100%{background:var(--card)}}
 .vchip{display:inline-flex;align-items:center;gap:4px;background:var(--accsoft);color:var(--acc);border-radius:10px;padding:5px 6px 5px 10px;font-weight:650;font-size:14px;margin:3px 4px 3px 0}
 .vchip button{display:inline-flex;padding:2px;border-radius:6px}
 .toast{position:fixed;left:50%;top:66px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:300;opacity:0;pointer-events:none;transition:opacity .2s;max-width:88vw;text-align:center}
@@ -223,6 +231,7 @@ mark{background:#ffe27a;color:#222;border-radius:3px}
   <symbol id="i-down2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
   <symbol id="i-up2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+  <symbol id="i-cut" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
 </defs></svg>
 
@@ -383,7 +392,7 @@ function closeAll() { const n = layers.length; if (!n) return; while (layers.len
 addEventListener('popstate', e => { const l = (e.state && e.state.l) || 0; while (layers.length > l) layers.pop().remove(); });
 /* ============ lettore ============ */
 const ACT = {};
-const APP_VER = 'v 2.1';
+const APP_VER = 'v 2.2';
 /* tinte pastello «carta»: accese ma morbide, non fluo (sul fondo crema). Il dato salva l'indice, quindi cambiare i valori recolora anche le evidenziazioni esistenti */
 const COLORS = [['Limone', '#FBEB7A'], ['Albicocca', '#FFC98A'], ['Salmone', '#FFA89A'], ['Rosa', '#FF9FC8'], ['Glicine', '#CFA6F0'], ['Pervinca', '#A9B0F5'],
   ['Cielo', '#94CBF7'], ['Acqua', '#8EE3E0'], ['Menta', '#9EE8B8'], ['Pistacchio', '#C4EA7E'], ['Sabbia', '#EED49A'], ['Perla', '#C9C9D3']];
@@ -1049,8 +1058,8 @@ function sermonFn(d) {
   const tools = `<div class="chips" style="padding-bottom:0">${c.title ? '' : `<button class="chip" data-act="sertedit">${ic('pen')} Modifica titolo</button>`}<button class="chip" data-act="sertexts">${c.texts ? 'Testi dei versetti: sì' : 'Testi dei versetti: no'}</button>${P ? '' : `<button class="chip" data-act="sercopy">${ic('copy')} Copia</button><button class="chip" data-act="sershare">${ic('share')} Condividi</button><button class="chip" data-act="serdel">${ic('trash')} Elimina</button>`}</div>`;
   const pts = s.points.map((p, i) => {
     const editing = c.edit === p.id;
-    return `<div class="card pt"><div class="row"><span class="n">${i + 1}</span><span class="sp"></span>${P ? '' : `<button class="ib" data-act="ptup" data-id="${p.id}" ${i ? '' : 'disabled style="opacity:.3"'}>${ic('up')}</button><button class="ib" data-act="ptdown" data-id="${p.id}" ${i < s.points.length - 1 ? '' : 'disabled style="opacity:.3"'}>${ic('down')}</button><button class="ib" data-act="ptdel" data-id="${p.id}">${ic('trash')}</button>`}</div>
-    ${editing ? `<textarea id="pttx" class="hand" style="margin:8px 0" placeholder="Idee, parole chiave, appunti…">${esc(p.text)}</textarea><div class="row"><button class="btn sm" data-act="ptsave" data-id="${p.id}">${ic('check')} Salva</button><button class="btn sec sm" data-act="ptcancel">Annulla</button></div>` : `<div class="tx">${p.text ? esc(p.text) : '<span class="mut" style="font-family:system-ui;font-size:14px">Nessun testo</span>'}</div><button class="btn sec sm" data-act="ptedit" data-id="${p.id}">${ic('pen')} Modifica</button>`}
+    return `<div class="card pt" data-pid="${p.id}"><div class="row"><span class="n">${i + 1}</span><span class="sp"></span>${P ? '' : `<button class="ib" data-act="ptup" data-id="${p.id}" ${i ? '' : 'disabled style="opacity:.3"'}>${ic('up')}</button><button class="ib" data-act="ptdown" data-id="${p.id}" ${i < s.points.length - 1 ? '' : 'disabled style="opacity:.3"'}>${ic('down')}</button><button class="ib" data-act="ptdel" data-id="${p.id}">${ic('trash')}</button>`}</div>
+    ${editing ? `<textarea id="pttx" class="hand" style="margin:8px 0" placeholder="Idee, parole chiave, appunti…">${esc(p.text)}</textarea><div class="row"><button class="btn sm" data-act="ptsave" data-id="${p.id}">${ic('check')} Salva</button><button class="btn sec sm" data-act="ptcancel">Annulla</button></div>` : `<div class="tx">${p.text ? (P ? esc(p.text) : cutHtml(p)) : '<span class="mut" style="font-family:system-ui;font-size:14px">Nessun testo</span>'}</div><button class="btn sec sm" data-act="ptedit" data-id="${p.id}">${ic('pen')} Modifica</button>`}
     <div style="margin-top:10px">${p.verses.map((r, j) => `<div><span class="vchip"><span data-act="vgo" data-bk="${r.bk}" data-c="${r.c1}" data-v="${r.v1 === 1 && r.v2 === 999 ? 0 : r.v1}">${esc(refLabel(r))}</span>${P ? '' : `<button data-act="vdel" data-id="${p.id}" data-j="${j}" aria-label="Rimuovi">${ic('x')}</button>`}</span>${c.texts ? `<div class="vquote">${vquote(r)}</div>` : ''}</div>`).join('')}${P ? '' : `<button class="btn sec sm" data-act="vadd" data-id="${p.id}" style="margin-top:6px">${ic('plus')} Versetto</button>`}</div></div>`;
   }).join('');
   return head + titleBox + tools + (pts || `<div class="empty">Nessun punto. Aggiungine uno, oppure trasferisci dei versetti dal testo.</div>`) + (P ? '' : `<div style="padding:4px 14px 20px"><button class="btn block" data-act="ptadd">${ic('plus')} Aggiungi punto</button></div>`);
@@ -1067,6 +1076,32 @@ ACT.ptsave = (el, e, d) => { pt(d, el.dataset.id).text = $('#pttx', d).value.tri
 ACT.ptadd = (el, e, d) => { const p = { id: uid(), text: '', verses: [] }; sd(d).points.push(p); touchS(sd(d)); d.ctx.edit = p.id; refreshLayer(d); const t = $('#pttx', d); if (t) { t.focus(); t.scrollIntoView({ block: 'center' }); } };
 ACT.ptdel = (el, e, d) => { if (!confirmed(el, 'Sicuro?')) return; const s = sd(d); s.points = s.points.filter(p => p.id !== el.dataset.id); touchS(s); refreshLayer(d); };
 const mv = (d, id, dir) => { const a = sd(d).points, i = a.findIndex(p => p.id === id), j = i + dir; if (j < 0 || j >= a.length) return; [a[i], a[j]] = [a[j], a[i]]; touchS(sd(d)); refreshLayer(d); };
+/* divisione di un punto: si può staccare un nuovo punto da ogni frase che inizia con «.» —
+   a inizio riga («. Il re Davide…», anche rientrata o «.Il re…») oppure nel mezzo della riga se staccato da spazi («… Giovanni . Rimando…»).
+   Non i puntini di sospensione, non il punto finale di una frase, non la prima frase del punto */
+function cutPts(t) {
+  const r = [], re = /(?<=(?:^|\n)[ \t]*)\.(?=[ \t]*[^\s.])|(?<=[ \t])\.(?=[ \t]+[^\s.])/g, f = t.search(/\S/); let m;
+  while ((m = re.exec(t))) if (m.index > f) r.push(m.index);
+  return r;
+}
+function cutHtml(p) {
+  const t = p.text; let h = '', a = 0;
+  for (const k of cutPts(t)) { h += esc(t.slice(a, k)) + `<span class="cutw"><button class="cut" data-act="ptcut" data-id="${p.id}" data-at="${k}" aria-label="Nuovo punto da qui">${ic('cut')}</button>.</span>`; a = k + 1; }
+  return h + esc(t.slice(a));
+}
+/* il testo da quel «.» in poi diventa un nuovo punto subito sotto; i versetti restano nel punto di partenza */
+ACT.ptcut = (el, e, d) => {
+  const s = sd(d), i = s.points.findIndex(p => p.id === el.dataset.id), p = s.points[i], k = +el.dataset.at;
+  if (!p || !cutPts(p.text).includes(k)) return;
+  const snap = JSON.stringify(s.points), q = { id: uid(), text: p.text.slice(k).trim(), verses: [] };
+  p.text = p.text.slice(0, k).trim(); s.points.splice(i + 1, 0, q); touchS(s); refreshLayer(d); renderSermons();
+  const c = $(`.pt[data-pid="${q.id}"]`, d); if (c) c.classList.add('newpt');
+  const stamp = s.updated, sid = s.id;
+  toastAction(`Nuovo punto ${i + 2} · tocca per annullare`, () => {
+    const s2 = SER(sid); if (!s2 || s2.updated !== stamp) return toast('Non si può più annullare');
+    s2.points = JSON.parse(snap); touchS(s2); if (d.isConnected) refreshLayer(d); renderSermons(); toast('Divisione annullata');
+  }, 7000);
+};
 ACT.ptup = (el, e, d) => mv(d, el.dataset.id, -1);
 ACT.ptdown = (el, e, d) => mv(d, el.dataset.id, 1);
 ACT.vdel = (el, e, d) => { pt(d, el.dataset.id).verses.splice(+el.dataset.j, 1); touchS(sd(d)); refreshLayer(d); };
